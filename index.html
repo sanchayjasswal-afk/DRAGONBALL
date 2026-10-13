@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f8fa">
+  <title>FollowUp Desk — Turn meetings into momentum</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17211c;
+      --muted: #77817b;
+      --line: #e8ece9;
+      --paper: #fff;
+      --canvas: #f7f8f6;
+      --green: #287a57;
+      --green-dark: #205f45;
+      --green-soft: #e9f4ed;
+      --amber: #a77727;
+      --shadow: 0 12px 32px rgba(31, 48, 39, .055);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); font-size: 14px; }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 242px minmax(0, 1fr); }
+    .sidebar { position: sticky; top: 0; height: 100vh; padding: 25px 17px 18px; background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+    .brand { display: flex; gap: 10px; align-items: center; padding: 0 7px; font-size: 15px; font-weight: 750; letter-spacing: -.45px; }
+    .brand-mark { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 10px; color: #fff; background: var(--green); }
+    .brand-mark svg { width: 17px; height: 17px; }
+    .side-label { margin: 37px 8px 10px; color: #a0a8a3; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.15px; }
+    .new-button { width: 100%; display: flex; gap: 9px; align-items: center; padding: 11px 12px; color: #fff; background: var(--green); border: 0; border-radius: 8px; font-weight: 650; box-shadow: 0 3px 7px #287a5722; }
+    .new-button:hover, .primary:hover { background: var(--green-dark); }
+    .new-button svg { width: 16px; height: 16px; }
+    .nav-item { display: flex; gap: 10px; align-items: center; width: 100%; padding: 9px 10px; border: 0; background: transparent; color: #58645d; text-align: left; border-radius: 7px; font-size: 13px; }
+    .nav-item.active { color: var(--green-dark); background: #eef5f0; font-weight: 650; }
+    .nav-item svg { width: 16px; height: 16px; }
+    .history { display: grid; gap: 3px; overflow: auto; }
+    .history .nav-item { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; }
+    .history-empty { padding: 8px 10px; color: #9aa39d; font-size: 12px; line-height: 1.5; }
+    .side-spacer { flex: 1; }
+    .plan-card { padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfb; }
+    .plan-title { font-size: 12px; font-weight: 700; }
+    .plan-copy { margin: 5px 0 11px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .plan-card button { padding: 0; border: 0; color: var(--green); background: none; font-size: 11px; font-weight: 700; }
+    .profile { display: flex; align-items: center; gap: 9px; margin: 17px 5px 0; color: #58645d; font-size: 12px; }
+    .avatar { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 50%; background: #f0e9dd; color: #735c3f; font-size: 11px; font-weight: 700; }
+    .main { min-width: 0; padding: 28px clamp(20px, 4vw, 58px) 45px; }
+    .topbar { max-width: 1320px; margin: 0 auto 36px; display: flex; align-items: center; justify-content: space-between; }
+    .breadcrumb { color: #89938d; font-size: 12px; }
+    .breadcrumb strong { color: #4b5750; font-weight: 600; }
+    .top-actions { display: flex; gap: 9px; align-items: center; }
+    .icon-button { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 8px; color: #657169; background: white; }
+    .icon-button svg { width: 15px; height: 15px; }
+    .content { width: 100%; max-width: 1320px; margin: 0 auto; }
+    .intro { margin-bottom: 24px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: .2px; }
+    .eyebrow span { width: 6px; height: 6px; border-radius: 50%; background: #58a77c; }
+    h1 { margin: 8px 0 6px; font-size: clamp(24px, 3vw, 31px); line-height: 1.2; letter-spacing: -1.1px; }
+    .subtitle { margin: 0; color: var(--muted); font-size: 13px; }
+    .workspace { display: grid; grid-template-columns: minmax(280px, .92fr) minmax(310px, 1.08fr); gap: 17px; align-items: start; }
+    .column { min-width: 0; display: grid; gap: 15px; }
+    .card { overflow: hidden; background: var(--paper); border: 1px solid var(--line); border-radius: 11px; box-shadow: var(--shadow); }
+    .card-head { display: flex; align-items: center; justify-content: space-between; padding: 17px 18px 14px; }
+    .card-title { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 700; }
+    .step { width: 23px; height: 23px; display: grid; place-items: center; border-radius: 7px; color: var(--green-dark); background: var(--green-soft); font-size: 11px; }
+    .helper { color: #9ba49e; font-size: 11px; }
+    .form { padding: 0 18px 18px; }
+    .field-label { display: block; margin: 0 0 6px; color: #5f6a63; font-size: 11px; font-weight: 650; }
+    .text-input, .notes-input, .email-input { width: 100%; color: #26322b; background: white; border: 1px solid #e5eae6; border-radius: 7px; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .text-input { height: 37px; padding: 0 10px; margin-bottom: 14px; font-size: 12px; }
+    .text-input:focus, .notes-input:focus, .email-input:focus { border-color: #78b28e; box-shadow: 0 0 0 3px #287a5714; }
+    .notes-input { min-height: 248px; resize: vertical; padding: 11px; font-size: 12px; line-height: 1.65; }
+    .notes-input::placeholder { color: #b0b8b3; }
+    .form-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 9px; color: #929d95; font-size: 10px; }
+    .link-button { padding: 0; border: 0; color: var(--green); background: none; font-size: 11px; font-weight: 650; }
+    .primary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 13px; border: 0; border-radius: 7px; color: #fff; background: var(--green); font-size: 12px; font-weight: 650; }
+    .primary svg, .secondary svg { width: 14px; height: 14px; }
+    .generate { width: 100%; margin-top: 14px; }
+    .secondary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; color: #536057; background: white; font-size: 11px; font-weight: 600; }
+    .secondary:hover { background: #f8faf8; border-color: #d6ddd8; }
+    .output-card { min-height: 487px; }
+    .output-card .card-head { border-bottom: 1px solid #eff1ef; }
+    .output-controls { display: flex; align-items: center; gap: 7px; }
+    .draft-label { display: inline-flex; align-items: center; gap: 5px; margin-right: 3px; color: #6d8e78; font-size: 10px; }
+    .draft-label span { width: 6px; height: 6px; background: #6bb083; border-radius: 50%; }
+    .output-body { padding: 16px 18px 18px; }
+    .section-label { margin: 2px 0 10px; color: #78837c; font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .85px; }
+    .action-list { display: grid; gap: 8px; }
+    .action-row { display: grid; grid-template-columns: 15px minmax(0, 1fr) 86px 88px; gap: 8px; align-items: center; padding: 8px 9px; border: 1px solid #edf0ed; border-radius: 7px; }
+    .action-check { width: 14px; height: 14px; accent-color: var(--green); }
+    .action-text { min-width: 0; color: #36423a; font-size: 11px; line-height: 1.45; }
+    .action-person, .action-date { overflow: hidden; padding: 5px 6px; border: 1px solid #eff1ef; border-radius: 5px; color: #768179; background: #fbfcfb; font-size: 10px; text-overflow: ellipsis; }
+    .action-person::placeholder, .action-date::placeholder { color: #adb5af; }
+    .empty-state { display: grid; min-height: 235px; place-content: center; justify-items: center; padding: 20px; color: #87928b; text-align: center; }
+    .empty-icon { display: grid; place-items: center; width: 43px; height: 43px; margin-bottom: 12px; border-radius: 13px; color: var(--green); background: #edf5ef; }
+    .empty-icon svg { width: 20px; height: 20px; }
+    .empty-state strong { margin-bottom: 5px; color: #536057; font-size: 12px; }
+    .empty-state span { max-width: 220px; font-size: 11px; line-height: 1.55; }
+    .email-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid #eff1ef; }
+    .email-topline { display: flex; justify-content: space-between; align-items: center; }
+    .email-input { height: 33px; padding: 0 9px; margin-bottom: 8px; font-size: 11px; }
+    .email-input.subject { font-weight: 650; }
+    .email-message { width: 100%; min-height: 153px; padding: 10px; resize: vertical; border: 1px solid #e5eae6; border-radius: 7px; color: #354139; outline: none; font-size: 11px; line-height: 1.65; }
+    .email-message:focus { border-color: #78b28e; box-shadow: 0 0 0 3px #287a5714; }
+    .email-message:disabled, .email-input:disabled { color: #a1aaa4; background: #fafbfa; }
+    .email-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 10; padding: 11px 15px; border-radius: 8px; color: white; background: #26372d; box-shadow: 0 8px 22px #17211c2b; font-size: 12px; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .upgrade-modal { position: fixed; inset: 0; z-index: 20; display: none; place-items: center; padding: 20px; background: #14201866; }
+    .upgrade-modal.open { display: grid; }
+    .modal-card { width: min(100%, 370px); padding: 23px; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: 0 20px 70px #101c1440; }
+    .modal-top { display: flex; justify-content: space-between; align-items: center; }
+    .modal-top h2 { margin: 0; font-size: 17px; letter-spacing: -.4px; }
+    .modal-card p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .price { margin: 17px 0 5px; color: var(--green-dark); font-size: 27px; font-weight: 750; letter-spacing: -1px; }
+    .price small { color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 0; }
+    .feature { padding: 7px 0; color: #536057; font-size: 12px; }
+    .feature::before { content: "✓"; margin-right: 8px; color: var(--green); font-weight: 800; }
+    .modal-card .primary { width: 100%; margin-top: 13px; }
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 205px minmax(0, 1fr); }
+      .workspace { grid-template-columns: 1fr; }
+      .output-card { min-height: auto; }
+    }
+    @media (max-width: 620px) {
+      .app { display: block; }
+      .sidebar { position: static; height: auto; flex-direction: row; align-items: center; justify-content: space-between; padding: 13px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .side-label, .new-button, .nav-item, .history, .side-spacer, .plan-card, .profile { display: none; }
+      .main { padding: 20px 14px 30px; }
+      .topbar { margin-bottom: 26px; }
+      .output-controls .draft-label { display: none; }
+      .action-row { grid-template-columns: 15px minmax(0, 1fr) 70px; }
+      .action-date { grid-column: 2 / 4; }
+      .card-head, .output-body { padding-left: 14px; padding-right: 14px; }
+    }
+    /* Product polish */
+    :root {
+      --ink: #17231d;
+      --muted: #748078;
+      --line: #e8ede8;
+      --canvas: #f5f7f4;
+      --green: #238357;
+      --green-dark: #176b45;
+      --green-soft: #eaf4ed;
+      --shadow: 0 2px 5px rgba(25, 45, 33, .025), 0 12px 34px rgba(25, 45, 33, .045);
+    }
+    body { font-size: 14px; letter-spacing: -.12px; }
+    .app { grid-template-columns: 254px minmax(0, 1fr); }
+    .sidebar { z-index: 2; padding: 27px 18px 19px; background: #18241e; border-right: 1px solid #26352c; color: #f4f7f4; }
+    .brand { padding: 0 5px; color: #f6f8f6; font-size: 16px; letter-spacing: -.65px; }
+    .brand-mark { width: 33px; height: 33px; border-radius: 11px; background: #36966a; box-shadow: 0 4px 14px #23835745; }
+    .side-label { margin-top: 39px; color: #829187; font-size: 9px; letter-spacing: 1.35px; }
+    .new-button { min-height: 42px; border-radius: 9px; background: #328c60; box-shadow: 0 5px 14px #0d171040; font-size: 12px; }
+    .new-button:hover, .primary:hover { background: #176b45; }
+    .nav-item { min-height: 37px; color: #aebbb1; transition: background .15s, color .15s; }
+    .nav-item:hover { color: #fff; background: #ffffff0b; }
+    .nav-item.active { color: #e5f5e9; background: #2c4738; }
+    .history .nav-item { min-height: 35px; color: #9eaca1; }
+    .history-empty { color: #819087; }
+    .plan-card { padding: 14px; background: #202e25; border-color: #34463a; border-radius: 10px; }
+    .plan-title { color: #e7eee9; font-size: 12px; }
+    .plan-copy { color: #9eaaa1; font-size: 11px; }
+    .plan-card button { color: #8fd3a7; }
+    .profile { color: #bdc8c0; font-size: 11px; }
+    .avatar { background: #34473a; color: #d4e8d9; }
+    .main { padding: 28px clamp(25px, 4.5vw, 64px) 54px; }
+    .topbar { margin-bottom: 45px; }
+    .breadcrumb { color: #8a948d; font-size: 11px; }
+    .breadcrumb strong { color: #455249; }
+    .icon-button { width: 36px; height: 36px; border-radius: 10px; transition: background .15s, border-color .15s, transform .15s; }
+    .icon-button:hover { border-color: #d1dbd2; background: #f7faf7; transform: translateY(-1px); }
+    .content { max-width: 1240px; }
+    .intro { position: relative; margin-bottom: 29px; }
+    .eyebrow { gap: 8px; color: #287a53; font-size: 10px; font-weight: 750; letter-spacing: 1.05px; }
+    .eyebrow span { width: 7px; height: 7px; box-shadow: 0 0 0 4px #e6f2e9; }
+    h1 { margin: 11px 0 8px; font-size: clamp(29px, 3.4vw, 38px); line-height: 1.12; letter-spacing: -1.65px; font-weight: 720; }
+    .subtitle { max-width: 570px; color: #748078; font-size: 13px; line-height: 1.65; }
+    .workspace { grid-template-columns: minmax(300px, .94fr) minmax(360px, 1.06fr); gap: 19px; }
+    .column { gap: 15px; }
+    .card { border-color: #e7ece7; border-radius: 13px; box-shadow: var(--shadow); }
+    .card-head { min-height: 59px; padding: 15px 19px; }
+    .card-title { gap: 10px; font-size: 13px; letter-spacing: -.15px; }
+    .step { width: 25px; height: 25px; border-radius: 8px; color: #236b47; background: #eaf4ed; font-size: 10px; font-weight: 750; }
+    .helper { color: #929d95; font-size: 10px; }
+    .form { padding: 2px 19px 19px; }
+    .field-label { margin-bottom: 7px; color: #46534a; font-size: 11px; font-weight: 700; }
+    .text-input, .notes-input, .email-input { border-color: #e2e8e2; border-radius: 8px; transition: border-color .16s, box-shadow .16s, background .16s; }
+    .text-input { height: 40px; padding: 0 11px; margin-bottom: 17px; font-size: 12px; }
+    .text-input::placeholder, .notes-input::placeholder, .email-input::placeholder { color: #a7b1a9; }
+    .text-input:focus, .notes-input:focus, .email-input:focus, .email-message:focus { border-color: #68a982; box-shadow: 0 0 0 3px #23835717; }
+    .notes-input { min-height: 260px; padding: 13px; background: #fdfefd; font-size: 12px; line-height: 1.75; }
+    .form-foot { margin-top: 11px; color: #929c95; font-size: 10px; }
+    .link-button { font-size: 11px; }
+    .link-button:hover { color: #145c3a; text-decoration: underline; text-underline-offset: 3px; }
+    .primary { min-height: 39px; padding: 10px 15px; border-radius: 8px; background: #238357; box-shadow: 0 3px 8px #23835724; font-size: 11px; font-weight: 700; transition: background .15s, box-shadow .15s, transform .15s; }
+    .primary:hover { box-shadow: 0 5px 12px #176b4530; transform: translateY(-1px); }
+    .generate { margin-top: 17px; }
+    .secondary { min-height: 32px; padding: 7px 10px; border-color: #e4e9e4; border-radius: 8px; color: #536057; font-size: 10px; transition: all .15s; }
+    .secondary:hover { background: #f6f9f6; border-color: #ccd9ce; }
+    .output-card { min-height: 501px; }
+    .output-card .card-head { border-bottom-color: #edf0ed; }
+    .output-controls { gap: 9px; }
+    .draft-label { color: #62876e; font-size: 10px; }
+    .draft-label > span:first-child { flex: 0 0 6px; background: #67aa7c; }
+    .draft-label > span:last-child { width: auto; height: auto; background: transparent; }
+    .output-body { padding: 19px; }
+    .section-label { margin: 2px 0 12px; color: #717e75; font-size: 9px; letter-spacing: 1.05px; }
+    .action-list { gap: 8px; }
+    .action-row { grid-template-columns: 16px minmax(0, 1fr) 82px 82px; gap: 8px; padding: 9px; border-color: #e9eeea; border-radius: 8px; transition: border-color .15s, background .15s; }
+    .action-row:hover { border-color: #d6e3d8; background: #fcfdfc; }
+    .action-check { width: 15px; height: 15px; cursor: pointer; }
+    .action-text { color: #344138; font-size: 11px; line-height: 1.5; }
+    .action-person, .action-date { min-width: 0; padding: 6px; border-color: #e9ede9; border-radius: 6px; color: #5e6b61; background: #fbfcfb; font-size: 10px; }
+    .action-person:focus, .action-date:focus { outline: none; border-color: #79b18c; }
+    .empty-state { min-height: 225px; }
+    .empty-icon { width: 47px; height: 47px; border-radius: 15px; background: #edf5ef; }
+    .empty-state strong { color: #46534a; font-size: 12px; }
+    .empty-state span { color: #89948d; }
+    .email-section { margin-top: 21px; padding-top: 17px; border-top-color: #edf0ed; }
+    .email-input { height: 36px; padding: 0 10px; font-size: 11px; }
+    .email-message { min-height: 160px; padding: 12px; border-color: #e2e8e2; border-radius: 8px; font-size: 11px; line-height: 1.75; }
+    .email-message:disabled, .email-input:disabled { color: #a1aaa4; background: #f8faf8; }
+    .email-actions { gap: 9px; margin-top: 11px; }
+    .toast { right: 24px; bottom: 24px; padding: 12px 16px; border-radius: 9px; font-size: 12px; }
+    .modal-card { padding: 25px; border-radius: 15px; }
+    :focus-visible { outline: 3px solid #57a87980; outline-offset: 2px; }
+    @media (max-width: 1000px) and (min-width: 761px) {
+      .app { grid-template-columns: 220px minmax(0, 1fr); }
+      .main { padding-right: 25px; padding-left: 25px; }
+      .workspace { grid-template-columns: minmax(260px, .9fr) minmax(310px, 1.1fr); gap: 13px; }
+      .action-row { grid-template-columns: 15px minmax(0, 1fr) 68px 70px; gap: 6px; }
+      .output-body { padding: 15px; }
+    }
+    @media (max-width: 760px) {
+      .app { display: block; }
+      .sidebar { position: sticky; top: 0; z-index: 5; height: auto; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 20px; border: 0; border-bottom: 1px solid #26352c; }
+      .side-label, .nav-item, .history, .side-spacer, .plan-card, .profile { display: none; }
+      .new-button { display: flex; width: auto; min-height: 36px; padding: 8px 11px; font-size: 11px; }
+      .main { padding: 18px 23px 38px; }
+      .topbar { margin-bottom: 32px; }
+      .workspace { grid-template-columns: 1fr; gap: 15px; }
+      .output-card { min-height: auto; }
+      .notes-input { min-height: 205px; }
+      .card-head { padding: 14px 17px; }
+      .form { padding: 2px 17px 17px; }
+      .output-body { padding: 17px; }
+    }
+    @media (max-width: 480px) {
+      .sidebar { padding: 11px 14px; }
+      .main { padding: 17px 13px 28px; }
+      .topbar { margin-bottom: 27px; }
+      .intro { margin-bottom: 22px; }
+      h1 { font-size: 29px; }
+      .subtitle { font-size: 12px; }
+      .output-controls .draft-label { display: none; }
+      .action-row { grid-template-columns: 16px minmax(0, 1fr) 72px; }
+      .action-date { grid-column: 2 / 4; }
+      .email-actions { flex-wrap: wrap; }
+    }
+    /* Final layout pass */
+    .main { background: radial-gradient(ellipse at 82% 1%, #edf4ef 0, #f6f8f5 31%, #f6f8f5 70%); }
+    .topbar { max-width: 1240px; margin-bottom: 38px; padding-bottom: 14px; border-bottom: 1px solid #e5eae5; }
+    .intro { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin-bottom: 27px; }
+    .hero-copy { min-width: 0; padding: 2px 0; }
+    h1 { max-width: 630px; font-size: clamp(31px, 3.3vw, 39px); letter-spacing: -1.85px; }
+    .subtitle { max-width: 510px; font-size: 13px; line-height: 1.7; }
+    .workflow-card { flex: 0 0 279px; padding: 13px 15px 12px; border: 1px solid #e3ebe4; border-radius: 11px; background: #ffffffc9; box-shadow: 0 4px 18px #1b33220a; }
+    .workflow-heading { margin: 0 0 7px 2px; color: #87938a; font-size: 9px; font-weight: 750; letter-spacing: .95px; text-transform: uppercase; }
+    .workflow-step { display: flex; align-items: center; gap: 10px; padding: 7px 2px; }
+    .workflow-step + .workflow-step { border-top: 1px solid #f0f3f0; }
+    .workflow-step > span { display: grid; flex: 0 0 23px; place-items: center; width: 23px; height: 23px; border-radius: 7px; color: #347550; background: #edf5ef; font-size: 9px; font-weight: 750; }
+    .workflow-step strong, .workflow-step small { display: block; }
+    .workflow-step strong { color: #344138; font-size: 10px; font-weight: 700; }
+    .workflow-step small { margin-top: 2px; color: #89948c; font-size: 9px; }
+    .workspace { grid-template-columns: minmax(310px, .91fr) minmax(380px, 1.09fr); gap: 17px; }
+    .card { border-color: #e3e9e3; border-radius: 12px; box-shadow: 0 2px 5px #162b1c08, 0 12px 36px #162b1c08; }
+    .card-head { min-height: 62px; }
+    .card-title { color: #27352c; font-size: 12px; }
+    .privacy-label { display: inline-flex; align-items: center; gap: 5px; color: #829087; font-size: 9px; white-space: nowrap; }
+    .privacy-label svg { width: 13px; height: 13px; color: #62866c; }
+    .form { padding-top: 4px; }
+    .notes-input { min-height: 250px; }
+    .output-card { min-height: 492px; }
+    .output-card .card-head { background: linear-gradient(90deg, #fff 55%, #fbfdfb); }
+    .action-row { grid-template-columns: 16px minmax(0, 1fr) 76px 76px; }
+    .action-person, .action-date { background: #fbfcfb; }
+    .email-section { margin-top: 19px; }
+    @media (max-width: 1150px) and (min-width: 761px) {
+      .intro { align-items: flex-start; }
+      .workflow-card { flex-basis: 250px; }
+      .workspace { grid-template-columns: minmax(280px, .9fr) minmax(350px, 1.1fr); gap: 13px; }
+      .action-row { grid-template-columns: 15px minmax(0, 1fr) 67px 67px; gap: 6px; }
+    }
+    @media (max-width: 900px) {
+      .intro { align-items: flex-start; }
+      .workflow-card { display: none; }
+      .workspace { grid-template-columns: 1fr; }
+      .notes-input { min-height: 210px; }
+    }
+    @media (max-width: 760px) {
+      .main { background: #f6f8f5; }
+      .topbar { margin-bottom: 30px; }
+      .intro { margin-bottom: 24px; }
+    }
+    @media (max-width: 480px) {
+      .topbar { padding-bottom: 11px; }
+      h1 { font-size: 30px; letter-spacing: -1.35px; }
+      .desktop-break { display: none; }
+      .privacy-label { font-size: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5 9.2 17 19 7"/></svg></div>
+        <span>followup<span style="color:#849087;font-weight:500">desk</span></span>
+      </div>
+      <div class="side-label">Workspace</div>
+      <button class="new-button" id="newBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New follow-up</button>
+      <div class="side-label" style="margin-top:25px">Menu</div>
+      <button class="nav-item active" id="allBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>All follow-ups</button>
+      <div class="side-label" style="margin-top:24px">Recent</div>
+      <div class="history" id="history"></div>
+      <div class="side-spacer"></div>
+      <div class="plan-card">
+        <div class="plan-title">Make follow-ups effortless</div>
+        <div class="plan-copy">You're on Free. Pro gives you more room to keep every conversation moving.</div>
+        <button id="upgradeBtn">Explore Pro <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="profile"><div class="avatar">Y</div><span>Your workspace</span></div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div class="breadcrumb">Workspace <span style="padding:0 7px;color:#c1c8c3">/</span> <strong>All follow-ups</strong></div>
+        <div class="top-actions">
+          <button class="icon-button" id="helpBtn" aria-label="About FollowUp Desk" title="About FollowUp Desk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.4 1.6c-.9.9-2 1.2-2 2.9M12 17h.01"/></svg>
+          </button>
+          <div class="avatar">Y</div>
+        </div>
+      </div>
+      <div class="content">
+        <header class="intro">
+          <div class="hero-copy">
+            <div class="eyebrow"><span></span> THE WORK AFTER THE MEETING</div>
+            <h1>Make every meeting<br class="desktop-break"> count after it ends.</h1>
+            <p class="subtitle">Turn unstructured notes into clear ownership, real deadlines, and a follow-up you’re proud to send.</p>
+          </div>
+          <aside class="workflow-card" aria-label="How FollowUp Desk works">
+            <div class="workflow-heading">A considered follow-through</div>
+            <div class="workflow-step"><span>01</span><div><strong>Capture the conversation</strong><small>Paste notes or a transcript</small></div></div>
+            <div class="workflow-step"><span>02</span><div><strong>Clarify what comes next</strong><small>Review owners and due dates</small></div></div>
+            <div class="workflow-step"><span>03</span><div><strong>Close the loop</strong><small>Send a thoughtful recap</small></div></div>
+          </aside>
+        </header>
+        <div class="workspace">
+          <section class="column">
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title"><span class="step">1</span> Add your meeting notes</div>
+                <span class="privacy-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg>Stored on this device</span>
+              </div>
+              <div class="form">
+                <label class="field-label" for="meetingTitle">Meeting name</label>
+                <input class="text-input" id="meetingTitle" placeholder="e.g. Project kickoff with Acme">
+                <label class="field-label" for="notes">Notes or transcript</label>
+                <textarea class="notes-input" id="notes" placeholder="Paste your notes here. Bullets work great!&#10;&#10;Example:&#10;• Maya to share the updated timeline by Friday&#10;• We agreed to start with the onboarding flow&#10;• I’ll send over the proposal tomorrow"></textarea>
+                <div class="form-foot"><span id="charCount">0 characters</span><button class="link-button" id="sampleBtn">Use sample notes</button></div>
+                <button class="primary generate" id="generateBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg>
+                  Generate follow-up
+                </button>
+              </div>
+            </div>
+            <div style="padding:2px 4px;color:#89938d;font-size:11px;line-height:1.6">
+              <strong style="color:#657169;font-weight:650">A little tip</strong> &nbsp; Include names and deadlines in your notes for clearer action items. Generated content stays on your device.
+            </div>
+          </section>
+          <section class="card output-card">
+            <div class="card-head">
+              <div class="card-title"><span class="step">2</span> Your follow-up</div>
+              <div class="output-controls">
+                <span class="draft-label"><span></span><span id="saveStatus">Ready</span></span>
+                <button class="secondary" id="saveBtn" title="Save this follow-up">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4h12l3 3v13H4V4zM8 4v6h8V4m-7 16v-6h6v6"/></svg>Save
+                </button>
+              </div>
+            </div>
+            <div class="output-body">
+              <div class="section-label">Action items <span id="actionCount"></span></div>
+              <div id="actionList" class="action-list"></div>
+              <div class="email-section">
+                <div class="email-topline"><div class="section-label" style="margin:0 0 10px">Email draft</div><span id="emailHint" class="helper">Editable before sending</span></div>
+                <input class="email-input" id="recipient" placeholder="To: add recipient email (optional)" aria-label="Recipient email">
+                <input class="email-input subject" id="subject" placeholder="Subject" aria-label="Email subject" disabled>
+                <textarea class="email-message" id="emailBody" placeholder="Your polished follow-up email will appear here." aria-label="Email body" disabled></textarea>
+                <div class="email-actions">
+                  <button class="secondary" id="copyBtn" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy email
+                  </button>
+                  <button class="primary" id="sendBtn" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13"/></svg>Open in email
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="upgrade-modal" id="upgradeModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-top"><h2 id="modalTitle">More room to follow through.</h2><button class="icon-button" id="closeModal" aria-label="Close">✕</button></div>
+      <p>FollowUp Desk Pro is designed for people who run on good conversations. This demo keeps everything local and doesn't process payments.</p>
+      <div class="price">$12 <small>/ month · planned</small></div>
+      <div class="feature">Unlimited saved follow-ups</div><div class="feature">Reusable email templates</div><div class="feature">Shared action items with your team</div>
+      <button class="primary" id="modalOkay">Sounds good</button>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const STORAGE_KEY = "followupdesk.v1";
+      const sampleTitle = "Project kickoff with Acme";
+      const sampleNotes = "Maya to share the updated timeline by Friday.\nWe agreed to start with the onboarding flow.\nI’ll send over the proposal tomorrow.\nJordan will collect feedback from the design team before our next check-in.";
+      const state = { drafts: [], currentId: null, actions: [] };
+      const verbs = /\b(to|will|will be|send|share|prepare|review|schedule|create|draft|follow up|confirm|deliver|update|check|collect|provide|finish|complete|discuss|email|reach out|finalize|build|coordinate|circulate|approve|look into|investigate|set up|send over)\b/i;
+      const datePattern = /\b(today|tomorrow|tonight|next week|next month|monday|tuesday|wednesday|thursday|friday|saturday|sunday|by (?:this |next )?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|by (?:the )?end of (?:the )?week|by \w+ \d{1,2}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2})\b/i;
+
+      function toast(message) {
+        const el = $("toast");
+        el.textContent = message;
+        el.classList.add("show");
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => el.classList.remove("show"), 2300);
+      }
+      function escapeHtml(text) {
+        return text.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+      }
+      function load() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+          state.drafts = Array.isArray(stored.drafts) ? stored.drafts : [];
+        } catch (error) {
+          console.error("Could not load saved follow-ups.", error);
+          toast("Saved follow-ups couldn't be loaded from this browser.");
+        }
+        renderHistory();
+      }
+      function persist() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ drafts: state.drafts }));
+          $("saveStatus").textContent = "Saved locally";
+        } catch (error) {
+          console.error("Could not save follow-up.", error);
+          toast("Could not save. Check your browser storage settings.");
+          return false;
+        }
+        return true;
+      }
+      function parseNotes(text) {
+        const lines = text.split(/\n+/).map((line) => line.trim().replace(/^(?:[-*•▪]|\d+[.)])\s*/, "")).filter(Boolean);
+        const candidates = [];
+        for (const line of lines) {
+          if (/^(?:agenda|attendees|meeting notes|decisions?|action items?|next steps?)\s*:?\s*$/i.test(line)) continue;
+          const sentences = line.match(/[^.!?]+[.!?]?/g) || [line];
+          for (const part of sentences) {
+            const clean = part.trim();
+            if (clean.length >= 9 && (verbs.test(clean) || /^[A-Z][a-z]+ (?:will|to)\b/.test(clean))) candidates.push(clean);
+          }
+        }
+        const unique = [...new Set(candidates)];
+        return unique.slice(0, 12).map((text) => {
+          const date = text.match(datePattern);
+          const person = text.match(/\b(?:for|owner:|assigned to)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/);
+          const leadingName = text.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:will|to)\b/);
+          return {
+            text: text.charAt(0).toUpperCase() + text.slice(1),
+            owner: (person && person[1]) || (leadingName && leadingName[1]) || "",
+            due: date ? date[0] : "",
+            done: false
+          };
+        });
+      }
+      function createEmail(title, actions) {
+        const list = actions.map((action) => `• ${action.text}${action.owner ? ` — ${action.owner}` : ""}${action.due ? ` (${action.due})` : ""}`).join("\n");
+        return `Hi there,\n\nThanks for taking the time to meet${title ? ` about ${title}` : ""}. Here's a quick recap of the next steps we discussed:\n\n${list}\n\nLet me know if I missed anything or if you'd like to adjust any of these. Looking forward to keeping things moving!\n\nBest,`;
+      }
+      function renderActions() {
+        $("actionCount").textContent = state.actions.length ? `(${state.actions.length})` : "";
+        const list = $("actionList");
+        if (!state.actions.length) {
+          list.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><strong>Your next steps will show up here</strong><span>Add meeting notes and generate a follow-up to get started.</span></div>';
+          return;
+        }
+        list.innerHTML = state.actions.map((action, index) => `<div class="action-row">
+          <input class="action-check" type="checkbox" aria-label="Mark action complete" data-index="${index}" ${action.done ? "checked" : ""}>
+          <div class="action-text" ${action.done ? 'style="text-decoration:line-through;color:#929d95"' : ""}>${escapeHtml(action.text)}</div>
+          <input class="action-person" aria-label="Owner" placeholder="Owner" value="${escapeHtml(action.owner)}" data-index="${index}">
+          <input class="action-date" aria-label="Due date" placeholder="Due date" value="${escapeHtml(action.due)}" data-index="${index}">
+        </div>`).join("");
+        list.querySelectorAll(".action-check").forEach((input) => input.addEventListener("change", () => {
+          state.actions[Number(input.dataset.index)].done = input.checked;
+          renderActions();
+        }));
+        list.querySelectorAll(".action-person, .action-date").forEach((input) => input.addEventListener("input", () => {
+          const action = state.actions[Number(input.dataset.index)];
+          if (input.classList.contains("action-person")) action.owner = input.value;
+          else action.due = input.value;
+          updateEmail();
+          $("saveStatus").textContent = "Unsaved changes";
+        }));
+      }
+      function setEmailEnabled(enabled) {
+        ["subject", "emailBody", "copyBtn", "sendBtn"].forEach((id) => { $(id).disabled = !enabled; });
+      }
+      function updateEmail() {
+        const title = $("meetingTitle").value.trim();
+        $("subject").value = title ? `Follow-up: ${title}` : "Meeting follow-up & next steps";
+        $("emailBody").value = createEmail(title, state.actions);
+        setEmailEnabled(state.actions.length > 0);
+      }
+      function renderHistory() {
+        const host = $("history");
+        if (!state.drafts.length) {
+          host.innerHTML = '<div class="history-empty">Your saved follow-ups will live here.</div>';
+          return;
+        }
+        host.innerHTML = state.drafts.slice(0, 8).map((draft) => `<button class="nav-item" data-id="${escapeHtml(draft.id)}" title="${escapeHtml(draft.title || "Untitled follow-up")}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg>${escapeHtml(draft.title || "Untitled follow-up")}</button>`).join("");
+        host.querySelectorAll("[data-id]").forEach((button) => button.addEventListener("click", () => openDraft(button.dataset.id)));
+      }
+      function saveDraft() {
+        if (!state.actions.length) { toast("Generate a follow-up before saving."); return; }
+        const title = $("meetingTitle").value.trim() || "Untitled follow-up";
+        const draft = { id: state.currentId || `${Date.now()}`, title, notes: $("notes").value, actions: state.actions, subject: $("subject").value, email: $("emailBody").value, recipient: $("recipient").value, updated: Date.now() };
+        const index = state.drafts.findIndex((item) => item.id === draft.id);
+        if (index >= 0) state.drafts[index] = draft;
+        else state.drafts.unshift(draft);
+        state.currentId = draft.id;
+        if (persist()) {
+          renderHistory();
+          toast("Follow-up saved on this device.");
+        }
+      }
+      function openDraft(id) {
+        const draft = state.drafts.find((item) => item.id === id);
+        if (!draft) return;
+        state.currentId = draft.id;
+        state.actions = draft.actions || [];
+        $("meetingTitle").value = draft.title === "Untitled follow-up" ? "" : draft.title;
+        $("notes").value = draft.notes || "";
+        $("recipient").value = draft.recipient || "";
+        $("subject").value = draft.subject || "";
+        $("emailBody").value = draft.email || "";
+        $("charCount").textContent = `${$("notes").value.length} characters`;
+        $("saveStatus").textContent = "Saved locally";
+        renderActions();
+        setEmailEnabled(state.actions.length > 0);
+      }
+      function newDraft() {
+        state.currentId = null;
+        state.actions = [];
+        $("meetingTitle").value = "";
+        $("notes").value = "";
+        $("recipient").value = "";
+        $("subject").value = "";
+        $("emailBody").value = "";
+        $("charCount").textContent = "0 characters";
+        $("saveStatus").textContent = "Ready";
+        renderActions();
+        setEmailEnabled(false);
+        $("meetingTitle").focus();
+      }
+      $("notes").addEventListener("input", () => {
+        $("charCount").textContent = `${$("notes").value.length.toLocaleString()} characters`;
+        $("saveStatus").textContent = "Unsaved changes";
+      });
+      $("meetingTitle").addEventListener("input", () => {
+        if (state.actions.length) updateEmail();
+      });
+      $("generateBtn").addEventListener("click", () => {
+        const notes = $("notes").value.trim();
+        if (!notes) { toast("Add your meeting notes first."); $("notes").focus(); return; }
+        state.actions = parseNotes(notes);
+        if (!state.actions.length) {
+          toast("No clear action items found. Try adding bullets with names or action words.");
+          return;
+        }
+        state.currentId = null;
+        renderActions();
+        updateEmail();
+        $("saveStatus").textContent = "Unsaved changes";
+        toast(`${state.actions.length} action item${state.actions.length === 1 ? "" : "s"} ready to review.`);
+      });
+      $("sampleBtn").addEventListener("click", () => {
+        $("meetingTitle").value = sampleTitle;
+        $("notes").value = sampleNotes;
+        $("charCount").textContent = `${sampleNotes.length} characters`;
+        $("saveStatus").textContent = "Unsaved changes";
+        $("notes").focus();
+      });
+      $("saveBtn").addEventListener("click", saveDraft);
+      $("newBtn").addEventListener("click", newDraft);
+      $("allBtn").addEventListener("click", newDraft);
+      $("copyBtn").addEventListener("click", async () => {
+        const text = `${$("subject").value}\n\n${$("emailBody").value}`;
+        try {
+          await navigator.clipboard.writeText(text);
+          toast("Email copied to clipboard.");
+        } catch (error) {
+          console.error("Clipboard write failed.", error);
+          $("emailBody").focus();
+          $("emailBody").select();
+          toast("Clipboard access was blocked. Select and copy the email text.");
+        }
+      });
+      $("sendBtn").addEventListener("click", () => {
+        const recipient = $("recipient").value.trim();
+        const params = new URLSearchParams({ subject: $("subject").value, body: $("emailBody").value });
+        window.location.href = `mailto:${encodeURIComponent(recipient)}?${params.toString()}`;
+      });
+      $("upgradeBtn").addEventListener("click", () => $("upgradeModal").classList.add("open"));
+      $("helpBtn").addEventListener("click", () => toast("FollowUp Desk turns meeting notes into editable action items and a ready-to-send email."));
+      $("closeModal").addEventListener("click", () => $("upgradeModal").classList.remove("open"));
+      $("modalOkay").addEventListener("click", () => $("upgradeModal").classList.remove("open"));
+      $("upgradeModal").addEventListener("click", (event) => { if (event.target === $("upgradeModal")) $("upgradeModal").classList.remove("open"); });
+      load();
+      renderActions();
+      setEmailEnabled(false);
+    })();
+  </script>
+</body>
+</html>
