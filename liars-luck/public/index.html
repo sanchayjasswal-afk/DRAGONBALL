@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101114">
+    <meta name="description" content="Challenge a friend to Liar's Luck: hear the mystery sound, call the bluff, and compete for points in a private two-player room.">
+    <meta name="application-name" content="Liar's Luck">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <title>LIAR'S LUCK | Roblox-inspired Party Game</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --page: #101114;
+            --surface: #191a1f;
+            --surface-raised: #202127;
+            --surface-soft: #25262d;
+            --stroke: rgba(255, 255, 255, .075);
+            --muted: #8d909d;
+            --text: #f7f7fb;
+            --purple: #a970ff;
+            --purple-bright: #c49aff;
+            --green: #42e6a4;
+            --red: #ff6680;
+            --radius-lg: 22px;
+            --shadow: 0 24px 80px rgba(0, 0, 0, .32);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text);
+            background:
+                radial-gradient(ellipse at 52% 27%, rgba(113, 68, 181, .12), transparent 42%),
+                var(--page);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button { font: inherit; }
+
+        .app-shell { min-height: 100vh; }
+
+        .topbar {
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 clamp(20px, 5vw, 76px);
+            border-bottom: 1px solid var(--stroke);
+            background: rgba(16, 17, 20, .78);
+            backdrop-filter: blur(18px);
+        }
+
+        .brand, .topbar-right, .player-chip, .eyebrow, .section-heading, .sound-title,
+        .game-card-footer, .sidebar-heading, .player-row, .stat-label, .round-label {
+            display: flex;
+            align-items: center;
+        }
+
+        .brand { gap: 12px; }
+
+        .brand-mark {
+            position: relative;
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 11px;
+            color: white;
+            background: linear-gradient(145deg, #bc8aff, #8147e8);
+            box-shadow: 0 5px 18px rgba(169, 112, 255, .28);
+        }
+
+        .brand-mark svg { width: 21px; height: 21px; }
+
+        .brand-name {
+            font-size: 14px;
+            font-weight: 850;
+            letter-spacing: .12em;
+        }
+
+        .brand-name span { color: var(--purple-bright); }
+
+        .topbar-right { gap: 18px; }
+
+        .live-pill, .player-chip {
+            height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--stroke);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .035);
+            color: #c8c8d2;
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .live-pill { gap: 8px; }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 11px rgba(66, 230, 164, .75);
+        }
+
+        .install-button {
+            min-height: 36px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 0 12px;
+            border: 1px solid rgba(169, 112, 255, .28);
+            border-radius: 999px;
+            color: #eadbff;
+            background: rgba(169, 112, 255, .1);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        .install-button.visible { display: inline-flex; }
+        .install-button:hover { background: rgba(169, 112, 255, .18); }
+
+        .player-chip { gap: 9px; }
+
+        .player-avatar {
+            width: 23px;
+            height: 23px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #ffcb7d, #ff855a);
+            font-size: 13px;
+        }
+
+        main {
+            width: min(1136px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 48px 0 54px;
+        }
+
+        .page-intro { margin-bottom: 26px; }
+
+        .eyebrow {
+            gap: 8px;
+            margin-bottom: 12px;
+            color: var(--purple-bright);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .17em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow-mark {
+            width: 7px;
+            height: 7px;
+            border-radius: 2px;
+            background: var(--purple-bright);
+            transform: rotate(45deg);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(29px, 4vw, 42px);
+            font-weight: 850;
+            letter-spacing: -.045em;
+            line-height: 1.08;
+        }
+
+        .page-subtitle {
+            margin: 11px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 286px;
+            align-items: start;
+            gap: 20px;
+        }
+
+        .game-card, .side-card {
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius-lg);
+            background: linear-gradient(155deg, rgba(32, 33, 39, .98), rgba(24, 25, 30, .98));
+            box-shadow: var(--shadow);
+        }
+
+        .game-card { overflow: hidden; }
+
+        .round-bar {
+            min-height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--stroke);
+        }
+
+        .round-label { gap: 9px; color: #c5c4ce; font-size: 12px; font-weight: 700; }
+
+        .round-number {
+            color: var(--purple-bright);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .round-tag {
+            padding: 6px 9px;
+            border: 1px solid rgba(169, 112, 255, .2);
+            border-radius: 999px;
+            color: #cdaaff;
+            background: rgba(169, 112, 255, .09);
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .game-content { padding: 25px 30px 21px; }
+
+        .opponent-row { display: flex; align-items: center; gap: 13px; }
+
+        .opponent-avatar {
+            position: relative;
+            width: 49px;
+            height: 49px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 15px;
+            background: linear-gradient(145deg, #41346a, #24263a);
+            font-size: 26px;
+        }
+
+        .opponent-avatar::after {
+            position: absolute;
+            right: -9px;
+            bottom: -13px;
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 9px;
+            background: rgba(255, 255, 255, .08);
+            content: "";
+            transform: rotate(20deg);
+        }
+
+        .opponent-meta { min-width: 0; }
+
+        .opponent-name { font-size: 14px; font-weight: 780; }
+
+        .opponent-status {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .opponent-status span { color: var(--green); }
+
+        .claim-panel {
+            position: relative;
+            margin-top: 20px;
+            padding: 17px 19px 17px 21px;
+            overflow: hidden;
+            border: 1px solid rgba(169, 112, 255, .16);
+            border-radius: 15px;
+            background: linear-gradient(105deg, rgba(128, 77, 201, .12), rgba(128, 77, 201, .035));
+        }
+
+        .claim-panel::before {
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 3px;
+            background: linear-gradient(var(--purple-bright), #8352d9);
+            content: "";
+        }
+
+        .claim-caption {
+            margin-bottom: 7px;
+            color: #aaa3b8;
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .claim-text {
+            margin: 0;
+            color: #f4edff;
+            font-size: clamp(16px, 2.2vw, 19px);
+            font-weight: 700;
+            letter-spacing: -.02em;
+        }
+
+        .claim-text strong { color: var(--purple-bright); }
+
+        .sound-stage {
+            position: relative;
+            min-height: 190px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 17px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .065);
+            border-radius: 17px;
+            background:
+                radial-gradient(ellipse at 50% 54%, rgba(137, 82, 213, .12), transparent 42%),
+                linear-gradient(135deg, #1b1c22, #17181d);
+        }
+
+        .sound-stage::before, .sound-stage::after {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 122px;
+            height: 122px;
+            border: 1px solid rgba(185, 146, 255, .09);
+            border-radius: 50%;
+            content: "";
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        .sound-stage::after {
+            width: 158px;
+            height: 158px;
+            border-color: rgba(185, 146, 255, .055);
+        }
+
+        .sound-button {
+            position: relative;
+            z-index: 1;
+            width: 68px;
+            height: 68px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, .23);
+            border-radius: 22px;
+            color: white;
+            background: linear-gradient(145deg, #aa72ff, #7542d3);
+            box-shadow: 0 10px 30px rgba(133, 80, 214, .36), inset 0 1px rgba(255, 255, 255, .25);
+            cursor: pointer;
+            transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+        }
+
+        .sound-button:hover {
+            box-shadow: 0 14px 38px rgba(133, 80, 214, .48), inset 0 1px rgba(255, 255, 255, .25);
+            filter: brightness(1.09);
+            transform: translateY(-2px);
+        }
+
+        .sound-button:active { transform: translateY(0) scale(.96); }
+        .sound-button:focus-visible, .guess-button:focus-visible, .sound-toggle:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+        .sound-button svg { width: 27px; height: 27px; }
+
+        .sound-prompt {
+            position: relative;
+            z-index: 1;
+            margin: 15px 0 0;
+            color: #e6e1ee;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .sound-hint {
+            position: relative;
+            z-index: 1;
+            margin: 5px 0 0;
+            color: #888592;
+            font-size: 10px;
+        }
+
+        .status-line {
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 8px 4px;
+            color: #aaaab5;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .status-line[data-state="success"] { color: var(--green); }
+        .status-line[data-state="error"] { color: var(--red); }
+
+        .guess-caption {
+            margin: 13px 0 11px;
+            color: #858592;
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .13em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .guess-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .guess-button {
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            border: 1px solid transparent;
+            border-radius: 13px;
+            color: #101714;
+            background: linear-gradient(180deg, #55edb1, #32ce91);
+            box-shadow: 0 5px 16px rgba(53, 220, 153, .13), inset 0 1px rgba(255, 255, 255, .22);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 850;
+            transition: transform .15s ease, filter .15s ease, opacity .15s ease;
+        }
+
+        .guess-button:hover:not(:disabled) { filter: brightness(1.07); transform: translateY(-1px); }
+        .guess-button:active:not(:disabled) { transform: translateY(1px); }
+        .guess-button:disabled { cursor: not-allowed; opacity: .38; }
+
+        .guess-button.lie {
+            border-color: rgba(255, 102, 128, .2);
+            color: #fff0f2;
+            background: linear-gradient(180deg, #f36a80, #db4f68);
+            box-shadow: 0 5px 16px rgba(229, 78, 105, .12), inset 0 1px rgba(255, 255, 255, .18);
+        }
+
+        .guess-icon {
+            width: 20px;
+            height: 20px;
+            display: grid;
+            place-items: center;
+            border-radius: 7px;
+            background: rgba(0, 0, 0, .1);
+            font-size: 12px;
+        }
+
+        .game-card-footer {
+            justify-content: space-between;
+            gap: 12px;
+            padding: 15px 24px;
+            border-top: 1px solid var(--stroke);
+            color: #9999a5;
+            font-size: 11px;
+        }
+
+        .score-stats { display: flex; gap: 21px; }
+
+        .stat-item { display: flex; align-items: center; gap: 7px; }
+        .stat-label { gap: 6px; color: #858592; }
+        .stat-value { color: #f3f0f8; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .stat-icon { color: var(--purple-bright); font-size: 13px; }
+        .stat-item.streak .stat-icon { color: #ffbd69; }
+
+        .sound-toggle {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 9px;
+            border: 1px solid var(--stroke);
+            border-radius: 9px;
+            color: #aaaab5;
+            background: rgba(255, 255, 255, .025);
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .sound-toggle:hover { color: white; background: rgba(255, 255, 255, .06); }
+
+        .sidebar { display: grid; gap: 15px; }
+
+        .side-card { padding: 20px; box-shadow: 0 16px 45px rgba(0, 0, 0, .18); }
+
+        .sidebar-heading { justify-content: space-between; gap: 8px; margin-bottom: 17px; }
+
+        .sidebar-heading h2 { margin: 0; font-size: 13px; font-weight: 800; }
+
+        .heading-icon {
+            width: 27px;
+            height: 27px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(169, 112, 255, .15);
+            border-radius: 9px;
+            color: var(--purple-bright);
+            background: rgba(169, 112, 255, .08);
+            font-size: 13px;
+        }
+
+        .steps { display: grid; gap: 15px; }
+
+        .step { display: grid; grid-template-columns: 27px 1fr; align-items: start; gap: 10px; }
+
+        .step-number {
+            width: 25px;
+            height: 25px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, .09);
+            border-radius: 8px;
+            color: #c7a8ff;
+            background: rgba(169, 112, 255, .08);
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .step-copy strong { display: block; margin: 2px 0 4px; font-size: 11px; font-weight: 750; }
+        .step-copy span { display: block; color: #8d8d99; font-size: 10px; line-height: 1.55; }
+
+        .record-card {
+            position: relative;
+            overflow: hidden;
+            border-color: rgba(255, 190, 105, .15);
+            background:
+                radial-gradient(ellipse at 100% 0%, rgba(255, 182, 90, .12), transparent 49%),
+                linear-gradient(155deg, #202127, #191a1f);
+        }
+
+        .record-card .heading-icon {
+            border-color: rgba(255, 190, 105, .15);
+            color: #ffca83;
+            background: rgba(255, 190, 105, .08);
+        }
+
+        .record-score { display: flex; align-items: baseline; gap: 8px; }
+        .record-score strong { font-size: 32px; font-weight: 850; letter-spacing: -.06em; }
+        .record-score span { color: #96939a; font-size: 10px; }
+        .record-caption { margin: 2px 0 0; color: #8c8b96; font-size: 10px; }
+
+        .leaderboard-card { padding-bottom: 10px; }
+        .leaderboard-card .sidebar-heading { margin-bottom: 12px; }
+
+        .player-row {
+            min-height: 48px;
+            gap: 10px;
+            border-top: 1px solid rgba(255, 255, 255, .055);
+        }
+
+        .rank { width: 14px; color: #9b9aa6; font-size: 10px; font-weight: 800; text-align: center; }
+        .mini-avatar {
+            width: 26px;
+            height: 26px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: #332a43;
+            font-size: 13px;
+        }
+
+        .player-row-name { flex: 1; color: #d2d0da; font-size: 10px; font-weight: 700; }
+        .player-row-score { color: #cbb1ff; font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .leaderboard-note { margin: 5px 0 0; color: #787884; font-size: 9px; line-height: 1.5; }
+
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 22px;
+            color: #656570;
+            font-size: 10px;
+        }
+
+        .page-footer span:last-child { text-align: right; }
+        .page-footer a { color: inherit; text-decoration: none; }
+        .page-footer a:hover { color: #c49aff; text-decoration: underline; }
+        .kbd {
+            padding: 2px 5px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 4px;
+            color: #a4a2ad;
+            background: rgba(255, 255, 255, .035);
+            font-size: 9px;
+        }
+
+        [hidden] { display: none !important; }
+
+        .room-lobby {
+            max-width: 750px;
+            margin: 0 auto;
+            padding: clamp(22px, 4vw, 34px);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius-lg);
+            background:
+                radial-gradient(ellipse at 100% 0%, rgba(169, 112, 255, .12), transparent 43%),
+                linear-gradient(155deg, rgba(32, 33, 39, .98), rgba(24, 25, 30, .98));
+            box-shadow: var(--shadow);
+        }
+
+        .lobby-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .lobby-heading .eyebrow { margin-bottom: 9px; }
+        .lobby-heading h2 { margin: 0; font-size: clamp(21px, 3.5vw, 28px); font-weight: 820; letter-spacing: -.04em; }
+        .lobby-heading p { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+        .lobby-players { display: flex; align-items: center; padding-right: 5px; }
+
+        .lobby-players span {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            margin-right: -7px;
+            border: 3px solid #202127;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #493769, #252638);
+            font-size: 19px;
+        }
+
+        .field-label { display: block; margin-bottom: 8px; color: #a4a1ad; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
+        .lobby-input {
+            min-width: 0;
+            height: 44px;
+            padding: 0 13px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 11px;
+            outline: none;
+            color: var(--text);
+            background: rgba(8, 9, 12, .42);
+            font-size: 12px;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .lobby-input::placeholder { color: #6f6e79; }
+        .lobby-input:focus { border-color: rgba(183, 137, 255, .7); box-shadow: 0 0 0 3px rgba(169, 112, 255, .12); }
+        .name-input { width: min(100%, 290px); }
+        .lobby-actions { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 18px; margin-top: 23px; }
+        .create-room { width: 100%; min-height: 44px; align-self: end; }
+
+        .room-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 15px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 11px;
+            color: #f8f4ff;
+            background: linear-gradient(145deg, #a86cff, #7743d6);
+            box-shadow: inset 0 1px rgba(255, 255, 255, .19);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 800;
+            transition: filter .15s ease, transform .15s ease, opacity .15s ease;
+        }
+
+        .room-action:hover:not(:disabled) { filter: brightness(1.09); transform: translateY(-1px); }
+        .room-action:disabled { cursor: wait; opacity: .55; }
+        .join-row { display: grid; grid-template-columns: minmax(90px, .7fr) minmax(0, 1fr); gap: 8px; }
+        .code-input { width: 100%; text-transform: uppercase; letter-spacing: .15em; font-weight: 800; }
+        .join-room { min-height: 44px; white-space: nowrap; }
+
+        .lobby-message {
+            min-height: 22px;
+            margin-top: 17px;
+            color: #9997a3;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .lobby-message[data-state="error"] { color: var(--red); }
+        .lobby-message[data-state="success"] { color: var(--green); }
+
+        .waiting-room {
+            margin-top: 19px;
+            padding-top: 20px;
+            border-top: 1px solid var(--stroke);
+            text-align: center;
+        }
+
+        .waiting-icon {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 11px;
+            border: 1px solid rgba(169, 112, 255, .18);
+            border-radius: 14px;
+            color: #c49aff;
+            background: rgba(169, 112, 255, .1);
+            font-size: 19px;
+        }
+
+        .waiting-copy strong, .waiting-copy span { display: block; }
+        .waiting-copy strong { font-size: 14px; }
+        .waiting-copy span { margin-top: 5px; color: var(--muted); font-size: 10px; }
+        .invite-row { display: flex; align-items: center; justify-content: center; gap: 11px; margin-top: 16px; }
+        .invite-code { color: #e7d7ff; font-size: 21px; font-weight: 900; letter-spacing: .22em; font-variant-numeric: tabular-nums; }
+        .copy-room { min-height: 34px; padding: 0 11px; font-size: 10px; }
+        .leave-room { margin-top: 12px; padding: 6px 10px; border: 0; color: #9995a2; background: transparent; cursor: pointer; font-size: 10px; }
+        .leave-room:hover { color: var(--red); }
+
+        .game-exit-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 24px 12px;
+            color: #73727e;
+            font-size: 9px;
+        }
+
+        .game-exit-row .leave-room { flex: 0 0 auto; margin: 0; }
+
+        @media (max-width: 780px) {
+            main { padding-top: 35px; }
+            .game-layout { grid-template-columns: minmax(0, 1fr) 250px; gap: 14px; }
+            .game-content { padding: 22px 21px 18px; }
+            .side-card { padding: 17px; }
+        }
+
+        @media (max-width: 640px) {
+            .topbar { height: 65px; padding: 0 18px; }
+            .live-pill { display: none; }
+            .install-button { min-height: 33px; padding: 0 9px; font-size: 10px; }
+            main { width: min(100% - 28px, 480px); padding: 31px 0 36px; }
+            .page-intro { margin-bottom: 20px; }
+            .game-layout { grid-template-columns: 1fr; }
+            .sidebar { grid-template-columns: 1fr 1fr; }
+            .leaderboard-card { grid-column: 1 / -1; }
+            .round-bar { padding: 0 18px; }
+            .game-content { padding: 19px 18px 16px; }
+            .game-card-footer { padding: 13px 17px; }
+            .page-footer { font-size: 9px; }
+            .room-lobby { padding: 21px 18px; }
+            .lobby-actions { grid-template-columns: 1fr; gap: 15px; }
+            .create-room { min-height: 44px; }
+            .game-exit-row { padding: 0 17px 12px; }
+        }
+
+        @media (max-width: 390px) {
+            .sidebar { grid-template-columns: 1fr; }
+            .leaderboard-card { grid-column: auto; }
+            .score-stats { gap: 12px; }
+            .game-card-footer { gap: 6px; font-size: 10px; }
+            .sound-toggle { padding: 6px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand" aria-label="Liar's Luck">
+                <div class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7.2 5.5h10.3l2.1 3.6-5.1 9.4H4.2l-2-3.7 5-9.3Z" fill="currentColor" opacity=".95"/>
+                        <path d="m8.3 9.1 2.4-1.4 2 1.2-2.4 1.4-2-1.2Zm4.3 2.5 2.4-1.4 2 1.2-2.4 1.4-2-1.2Z" fill="#8650df"/>
+                    </svg>
+                </div>
+                <div class="brand-name">LIAR'S <span>LUCK</span></div>
+            </div>
+            <div class="topbar-right">
+                <div class="live-pill"><span class="live-dot"></span> ARCADE MODE</div>
+                <button class="install-button" id="install-app" type="button" aria-label="Install Liar's Luck app">↓ <span>Install</span></button>
+                <div class="player-chip"><span class="player-avatar">😎</span><span id="header-player-name">Player</span></div>
+            </div>
+        </header>
+
+        <main>
+            <section class="page-intro" aria-labelledby="page-title">
+                <div class="eyebrow"><span class="eyebrow-mark"></span> THE PARTY GAME</div>
+                <h1 id="page-title">Can you spot the lie?</h1>
+                <p class="page-subtitle">Challenge a friend. You both hear the same sound — first to spot the bluff gets the bragging rights.</p>
+            </section>
+
+            <section class="room-lobby" id="room-lobby" aria-labelledby="lobby-title">
+                <div class="lobby-heading">
+                    <div>
+                        <div class="eyebrow"><span class="eyebrow-mark"></span> TWO-PLAYER ONLINE</div>
+                        <h2 id="lobby-title">Bring a friend into the game</h2>
+                        <p>Create a private room or join one with a friend's code.</p>
+                    </div>
+                    <div class="lobby-players" aria-hidden="true"><span>😎</span><span>🤖</span></div>
+                </div>
+                <label class="field-label" for="player-name">YOUR PLAYER NAME</label>
+                <input class="lobby-input name-input" id="player-name" maxlength="18" autocomplete="nickname" placeholder="Choose a name" value="Player">
+                <div class="lobby-actions">
+                    <button class="room-action create-room" id="create-room" type="button"><span aria-hidden="true">＋</span> Create a room</button>
+                    <div class="join-form">
+                        <label class="field-label" for="room-code-input">HAVE A ROOM CODE?</label>
+                        <div class="join-row">
+                            <input class="lobby-input code-input" id="room-code-input" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="ABC123" aria-label="Six-character room code">
+                            <button class="room-action join-room" id="join-room" type="button">Join room <span aria-hidden="true">→</span></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="lobby-message" id="lobby-message" role="status" aria-live="polite">Both players answer privately each round. The reveal comes after both votes.</div>
+                <section class="waiting-room" id="waiting-room" hidden aria-live="polite">
+                    <div class="waiting-icon" aria-hidden="true">⌛</div>
+                    <div class="waiting-copy">
+                        <strong id="waiting-title">Your room is ready</strong>
+                        <span id="waiting-message">Share this code with your friend to join.</span>
+                    </div>
+                    <div class="invite-row">
+                        <span class="invite-code" id="invite-code">------</span>
+                        <button class="room-action copy-room" id="copy-room" type="button">Share invite</button>
+                    </div>
+                    <button class="leave-room" id="leave-room" type="button">Cancel room</button>
+                </section>
+            </section>
+
+            <div class="game-layout" id="game-layout" hidden>
+                <section class="game-card" aria-label="Lying challenge game">
+                    <div class="round-bar">
+                        <div class="round-label"><span>ROUND</span><span class="round-number" id="round-number">01</span></div>
+                        <span class="round-tag">Sound showdown</span>
+                    </div>
+
+                    <div class="game-content">
+                        <div class="opponent-row">
+                            <div class="opponent-avatar" aria-hidden="true">🤖</div>
+                            <div class="opponent-meta">
+                                <div class="opponent-name" id="opponent-name">Your opponent</div>
+                                <div class="opponent-status" id="opponent-status"><span>●</span> Both players are connected</div>
+                            </div>
+                        </div>
+
+                        <div class="claim-panel">
+                            <div class="claim-caption">Their claim</div>
+                            <p class="claim-text" id="claim-text">Waiting for the round to begin…</p>
+                        </div>
+
+                        <div class="sound-stage">
+                            <button class="sound-button" id="audio-trigger" type="button" aria-label="Play the round sound">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 10v4h3l4 3V7l-4 3H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                    <path d="M15 9a4 4 0 0 1 0 6m2.5-8.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                            <p class="sound-prompt" id="sound-prompt">Your round sound will appear here</p>
+                            <p class="sound-hint" id="sound-hint">Both players get the same sound and claim</p>
+                        </div>
+
+                        <div class="status-line" id="status-text" role="status" aria-live="polite">Waiting for both players…</div>
+                        <div class="guess-caption">Is their claim true or false?</div>
+
+                        <div class="guess-grid">
+                            <button class="guess-button" id="truth-button" type="button" disabled>
+                                <span class="guess-icon" aria-hidden="true">✓</span> Truth
+                            </button>
+                            <button class="guess-button lie" id="lie-button" type="button" disabled>
+                                <span class="guess-icon" aria-hidden="true">✕</span> Bluff
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="game-card-footer">
+                        <div class="score-stats">
+                            <div class="stat-item"><span class="stat-icon" aria-hidden="true">✦</span><span class="stat-label">You</span><span class="stat-value" id="score">0</span></div>
+                            <div class="stat-item streak"><span class="stat-icon" aria-hidden="true">⚔</span><span class="stat-label">Rival</span><span class="stat-value" id="opponent-score">0</span></div>
+                        </div>
+                        <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="false" aria-label="Mute game sounds">
+                            <span id="sound-toggle-icon" aria-hidden="true">♫</span><span id="sound-toggle-label">SOUND ON</span>
+                        </button>
+                    </div>
+                    <div class="game-exit-row">
+                        <span>Both answers stay secret until the reveal.</span>
+                        <button class="leave-room in-game-leave" id="leave-game" type="button">Leave match</button>
+                    </div>
+                </section>
+
+                <aside class="sidebar" aria-label="Game information">
+                    <section class="side-card">
+                        <div class="sidebar-heading">
+                            <h2>How to play</h2>
+                            <span class="heading-icon" aria-hidden="true">?</span>
+                        </div>
+                        <div class="steps">
+                            <div class="step">
+                                <span class="step-number">01</span>
+                                <div class="step-copy"><strong>Listen up</strong><span>Both players hear the same mystery sound.</span></div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">02</span>
+                                <div class="step-copy"><strong>Read the claim</strong><span>Decide if the item matches what you heard.</span></div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">03</span>
+                                <div class="step-copy"><strong>Call it out</strong><span>Both answers lock privately. Correct calls earn 10 points.</span></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="side-card record-card">
+                        <div class="sidebar-heading">
+                            <h2>Your best</h2>
+                            <span class="heading-icon" aria-hidden="true">♛</span>
+                        </div>
+                        <div class="record-score"><strong id="best-score">0</strong><span>POINTS</span></div>
+                        <p class="record-caption">Your best score this session</p>
+                    </section>
+
+                    <section class="side-card leaderboard-card">
+                        <div class="sidebar-heading">
+                            <h2>Top players</h2>
+                            <span class="heading-icon" aria-hidden="true">✦</span>
+                        </div>
+                        <div class="player-row">
+                            <span class="rank">1</span><span class="mini-avatar">🦊</span><span class="player-row-name">PixelFox</span><span class="player-row-score">2,480</span>
+                        </div>
+                        <div class="player-row">
+                            <span class="rank">2</span><span class="mini-avatar">🐸</span><span class="player-row-name">FroggyPro</span><span class="player-row-score">1,960</span>
+                        </div>
+                        <div class="player-row">
+                            <span class="rank">3</span><span class="mini-avatar">🐼</span><span class="player-row-name">BlockBuddy</span><span class="player-row-score">1,520</span>
+                        </div>
+                        <p class="leaderboard-note">Example leaderboard. Room scores are shared live with your opponent.</p>
+                    </section>
+                </aside>
+            </div>
+
+            <footer class="page-footer">
+                <span>LIAR'S LUCK <span aria-hidden="true">·</span> Sound showdown</span>
+                <span><a href="/privacy">Privacy</a> <span aria-hidden="true">·</span> <kbd class="kbd">1</kbd> Truth <span aria-hidden="true">/</span> <kbd class="kbd">2</kbd> Bluff</span>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        let socket = null;
+        let playerId = null;
+        let roomCode = null;
+        let currentRound = null;
+        let score = 0;
+        let streak = 0;
+        let opponentScore = 0;
+        let bestScore = 0;
+        let audioContext = null;
+        let soundEnabled = true;
+        let leavingRoom = false;
+
+        const roomLobby = document.getElementById("room-lobby");
+        const gameLayout = document.getElementById("game-layout");
+        const waitingRoom = document.getElementById("waiting-room");
+        const lobbyMessage = document.getElementById("lobby-message");
+        const playerNameInput = document.getElementById("player-name");
+        const roomCodeInput = document.getElementById("room-code-input");
+        const createRoomButton = document.getElementById("create-room");
+        const joinRoomButton = document.getElementById("join-room");
+        const claimText = document.getElementById("claim-text");
+        const statusText = document.getElementById("status-text");
+        const audioButton = document.getElementById("audio-trigger");
+        const truthButton = document.getElementById("truth-button");
+        const lieButton = document.getElementById("lie-button");
+        const soundPrompt = document.getElementById("sound-prompt");
+        const soundHint = document.getElementById("sound-hint");
+        const installButton = document.getElementById("install-app");
+        let installPrompt = null;
+
+        function registerServiceWorker() {
+            if (!("serviceWorker" in navigator) || !/^https?:$/.test(window.location.protocol)) return;
+            navigator.serviceWorker.register("/sw.js").catch(error => {
+                console.warn("Liar's Luck could not register offline app support.", error);
+            });
+        }
+
+        window.addEventListener("beforeinstallprompt", event => {
+            event.preventDefault();
+            installPrompt = event;
+            installButton.classList.add("visible");
+        });
+
+        window.addEventListener("appinstalled", () => {
+            installPrompt = null;
+            installButton.classList.remove("visible");
+        });
+
+        installButton.addEventListener("click", async () => {
+            if (!installPrompt) return;
+            installPrompt.prompt();
+            await installPrompt.userChoice;
+            installPrompt = null;
+            installButton.classList.remove("visible");
+        });
+
+        registerServiceWorker();
+
+        function playSynthSound(type) {
+            if (!soundEnabled) return;
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) {
+                setStatus("Audio isn't supported in this browser. You can still play!", "error");
+                return;
+            }
+
+            if (!audioContext) audioContext = new AudioContextClass();
+            if (audioContext.state === "suspended") {
+                audioContext.resume().catch(() => setStatus("Your browser blocked audio. Press play again to retry.", "error"));
+            }
+
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+
+            const now = audioContext.currentTime;
+            const sounds = {
+                bounce() {
+                    oscillator.frequency.setValueAtTime(150, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.3);
+                },
+                laser() {
+                    oscillator.type = "sawtooth";
+                    oscillator.frequency.setValueAtTime(800, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.4);
+                },
+                metallic() {
+                    oscillator.type = "triangle";
+                    oscillator.frequency.setValueAtTime(1200, now);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.6);
+                },
+                beep() {
+                    oscillator.type = "sine";
+                    oscillator.frequency.setValueAtTime(2000, now);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.setValueAtTime(0, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now + 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.3);
+                }
+            };
+
+            if (sounds[type]) sounds[type]();
+        }
+
+        function setGuessingEnabled(enabled) {
+            truthButton.disabled = !enabled;
+            lieButton.disabled = !enabled;
+        }
+
+        function setStatus(message, state = "") {
+            statusText.textContent = message;
+            statusText.dataset.state = state;
+        }
+
+        function setConnectionControls(enabled) {
+            createRoomButton.disabled = !enabled;
+            joinRoomButton.disabled = !enabled;
+            playerNameInput.disabled = !enabled;
+            roomCodeInput.disabled = !enabled;
+        }
+
+        function showLobbyMessage(message, state = "") {
+            lobbyMessage.textContent = message;
+            lobbyMessage.dataset.state = state;
+        }
+
+        function connectToRoom(action) {
+            const name = playerNameInput.value.trim();
+            const code = roomCodeInput.value.trim().toUpperCase();
+            if (!name) {
+                showLobbyMessage("Choose a player name before entering a room.", "error");
+                playerNameInput.focus();
+                return;
+            }
+            if (action === "join" && code.length !== 6) {
+                showLobbyMessage("Enter the six-character room code your friend shared.", "error");
+                roomCodeInput.focus();
+                return;
+            }
+            if (window.location.protocol !== "http:" && window.location.protocol !== "https:") {
+                showLobbyMessage("Online rooms need the hosted game website. Don't open this page as a local file.", "error");
+                return;
+            }
+            if (socket && socket.readyState !== WebSocket.CLOSED) return;
+
+            leavingRoom = false;
+            setConnectionControls(false);
+            showLobbyMessage("Connecting to the game server…");
+            const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+            const connection = new WebSocket(`${protocol}//${window.location.host}/ws`);
+            socket = connection;
+
+            connection.addEventListener("open", () => {
+                const message = action === "create"
+                    ? { type: "create", name }
+                    : { type: "join", name, code };
+                connection.send(JSON.stringify(message));
+            });
+            connection.addEventListener("message", event => {
+                if (socket !== connection) return;
+                try {
+                    handleServerMessage(JSON.parse(event.data));
+                } catch {
+                    showLobbyMessage("The server sent an unreadable response. Please reconnect.", "error");
+                }
+            });
+            connection.addEventListener("error", () => {
+                if (socket === connection) {
+                    showLobbyMessage("Couldn't reach the game server. Check your connection and try again.", "error");
+                    socket = null;
+                    connection.close();
+                    setConnectionControls(true);
+                }
+            });
+            connection.addEventListener("close", () => {
+                if (socket !== connection) return;
+                socket = null;
+                if (leavingRoom) return;
+                if (roomCode) resetRoom("Connection to the match was lost. Create a new room or join again.", "error");
+                else setConnectionControls(true);
+            });
+        }
+
+        function updatePlayers(players) {
+            const me = players.find(player => player.id === playerId);
+            const opponent = players.find(player => player.id !== playerId);
+            if (me) {
+                score = me.score;
+                streak = me.streak;
+                document.getElementById("score").textContent = score;
+                document.getElementById("header-player-name").textContent = me.name;
+                document.getElementById("best-score").textContent = bestScore;
+            }
+            if (opponent) {
+                opponentScore = opponent.score;
+                document.getElementById("opponent-name").textContent = opponent.name;
+                document.getElementById("opponent-score").textContent = opponent.score;
+                document.getElementById("opponent-status").textContent = opponent.connected
+                    ? "● Connected and ready"
+                    : "● Reconnecting…";
+            } else {
+                document.getElementById("opponent-name").textContent = "Waiting for opponent";
+                document.getElementById("opponent-score").textContent = "0";
+                document.getElementById("opponent-status").textContent = "● Share the code to invite a friend";
+            }
+        }
+
+        function handleServerMessage(message) {
+            if (!message || typeof message.type !== "string") return;
+
+            if (message.type === "welcome") {
+                playerId = message.playerId;
+                roomCode = message.code;
+                document.getElementById("invite-code").textContent = roomCode;
+                document.getElementById("waiting-title").textContent = "Your room is ready";
+                document.getElementById("waiting-message").textContent = "Share this code with your friend to join.";
+                showLobbyMessage(`Room ${roomCode} is ready. Share the code with your friend.`, "success");
+                setConnectionControls(false);
+                return;
+            }
+
+            if (message.type === "roomState") {
+                roomCode = message.code;
+                updatePlayers(message.players || []);
+                if (message.phase === "waiting") {
+                    roomLobby.hidden = false;
+                    gameLayout.hidden = true;
+                    waitingRoom.hidden = false;
+                    const connectedOpponent = message.players.some(player => player.id !== playerId && player.connected);
+                    document.getElementById("waiting-title").textContent = connectedOpponent
+                        ? "Getting your match ready…"
+                        : "Your room is ready";
+                    document.getElementById("waiting-message").textContent = connectedOpponent
+                        ? "Both players are in. The first round is starting."
+                        : "Share this code with your friend to join.";
+                    if (!socket || socket.readyState !== WebSocket.OPEN) setConnectionControls(true);
+                } else {
+                    roomLobby.hidden = true;
+                    waitingRoom.hidden = true;
+                    gameLayout.hidden = false;
+                    setConnectionControls(false);
+                }
+                return;
+            }
+
+            if (message.type === "round") {
+                currentRound = { sound: message.sound, claimed: message.claimed, number: message.number };
+                document.getElementById("round-number").textContent = String(message.number).padStart(2, "0");
+                claimText.textContent = `“I'm holding a ${message.claimed}.”`;
+                setStatus("Both answers are private until you have each made your call.");
+                soundPrompt.textContent = "Tap to hear the mystery sound";
+                soundHint.textContent = "You can replay it before you lock in your answer";
+                audioButton.setAttribute("aria-label", "Play or replay the mystery sound");
+                setGuessingEnabled(true);
+                document.getElementById("opponent-status").textContent = "● Both players are ready";
+                return;
+            }
+
+            if (message.type === "answerStatus") {
+                const submitted = message.submittedPlayerIds.includes(playerId);
+                setGuessingEnabled(!submitted && Boolean(currentRound));
+                if (submitted) {
+                    setStatus(`Your answer is locked in. Waiting for your opponent (${message.answered}/${message.total}).`);
+                } else {
+                    setStatus("Your opponent has locked in. Your answer is still private.");
+                }
+                return;
+            }
+
+            if (message.type === "result") {
+                currentRound = null;
+                setGuessingEnabled(false);
+                const me = message.players.find(player => player.id === playerId);
+                const opponent = message.players.find(player => player.id !== playerId);
+                if (me) {
+                    score = me.score;
+                    streak = me.streak;
+                    document.getElementById("score").textContent = score;
+                    bestScore = Math.max(bestScore, score);
+                    document.getElementById("best-score").textContent = bestScore;
+                    setStatus(
+                        me.correct ? `Correct call! It was a ${message.realItem}. +10 points` : `Not this time — it was a ${message.realItem}.`,
+                        me.correct ? "success" : "error"
+                    );
+                }
+                if (opponent) {
+                    opponentScore = opponent.score;
+                    document.getElementById("opponent-score").textContent = opponentScore;
+                    document.getElementById("opponent-status").textContent =
+                        `${opponent.name} called ${opponent.guess ? "TRUTH" : "BLUFF"} — ${opponent.correct ? "correct" : "missed"}`;
+                }
+                soundPrompt.textContent = "Both votes are in";
+                soundHint.textContent = `The sound was a ${message.realItem}`;
+                return;
+            }
+
+            if (message.type === "peerLeft") {
+                currentRound = null;
+                setGuessingEnabled(false);
+                roomLobby.hidden = false;
+                gameLayout.hidden = true;
+                waitingRoom.hidden = false;
+                document.getElementById("waiting-title").textContent = "Your opponent left";
+                document.getElementById("waiting-message").textContent = "Share your room code to invite someone else.";
+                showLobbyMessage(message.message, "error");
+                return;
+            }
+
+            if (message.type === "error") {
+                if (roomCode) {
+                    setStatus(message.message, "error");
+                } else {
+                    showLobbyMessage(message.message, "error");
+                    setConnectionControls(true);
+                    const failedConnection = socket;
+                    socket = null;
+                    if (failedConnection) failedConnection.close();
+                }
+            }
+        }
+
+        function submitAnswer(guess) {
+            if (!currentRound || !socket || socket.readyState !== WebSocket.OPEN) return;
+            setGuessingEnabled(false);
+            setStatus("Locking in your answer…");
+            socket.send(JSON.stringify({ type: "answer", guess }));
+        }
+
+        function resetRoom(message, state = "") {
+            leavingRoom = true;
+            if (socket && socket.readyState < WebSocket.CLOSING) socket.close(1000, "Leaving room");
+            socket = null;
+            playerId = null;
+            roomCode = null;
+            currentRound = null;
+            score = 0;
+            streak = 0;
+            opponentScore = 0;
+            setGuessingEnabled(false);
+            roomLobby.hidden = false;
+            gameLayout.hidden = true;
+            waitingRoom.hidden = true;
+            setConnectionControls(true);
+            document.getElementById("header-player-name").textContent = playerNameInput.value.trim() || "Player";
+            document.getElementById("score").textContent = "0";
+            document.getElementById("opponent-score").textContent = "0";
+            document.getElementById("opponent-name").textContent = "Your opponent";
+            document.getElementById("invite-code").textContent = "------";
+            showLobbyMessage(message || "Both players answer privately each round. The reveal comes after both votes.", state);
+        }
+
+        function leaveRoom() {
+            resetRoom("You left the match. Create a new room or join a friend's room.");
+        }
+
+        createRoomButton.addEventListener("click", () => connectToRoom("create"));
+        joinRoomButton.addEventListener("click", () => connectToRoom("join"));
+        playerNameInput.addEventListener("input", () => {
+            if (!roomCode) document.getElementById("header-player-name").textContent = playerNameInput.value.trim() || "Player";
+        });
+        roomCodeInput.addEventListener("input", () => {
+            roomCodeInput.value = roomCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+        });
+        roomCodeInput.addEventListener("keydown", event => {
+            if (event.key === "Enter") connectToRoom("join");
+        });
+
+        document.getElementById("copy-room").addEventListener("click", async () => {
+            if (!roomCode) return;
+            const invite = new URL("/", window.location.origin);
+            invite.searchParams.set("room", roomCode);
+            try {
+                if (navigator.share) {
+                    await navigator.share({
+                        title: "Join my Liar's Luck game",
+                        text: `Join my two-player game with room code ${roomCode}.`,
+                        url: invite.href
+                    });
+                    showLobbyMessage("Invite shared with your friend.", "success");
+                    return;
+                }
+                if (!navigator.clipboard) throw new Error("Clipboard sharing is unavailable in this browser.");
+                await navigator.clipboard.writeText(invite.href);
+                showLobbyMessage("Invite link copied. Send it to your friend!", "success");
+            } catch (error) {
+                if (error.name === "AbortError") return;
+                console.warn("Liar's Luck could not copy the room invite link.", error);
+                showLobbyMessage(`Share this invite link with your friend: ${invite.href}`, "success");
+            }
+        });
+
+        document.getElementById("leave-room").addEventListener("click", leaveRoom);
+        document.getElementById("leave-game").addEventListener("click", leaveRoom);
+        audioButton.addEventListener("click", () => {
+            if (currentRound) playSynthSound(currentRound.sound);
+        });
+        truthButton.addEventListener("click", () => submitAnswer(true));
+        lieButton.addEventListener("click", () => submitAnswer(false));
+
+        document.getElementById("sound-toggle").addEventListener("click", event => {
+            soundEnabled = !soundEnabled;
+            const button = event.currentTarget;
+            button.setAttribute("aria-pressed", String(!soundEnabled));
+            button.setAttribute("aria-label", soundEnabled ? "Mute game sounds" : "Turn on game sounds");
+            document.getElementById("sound-toggle-icon").textContent = soundEnabled ? "♫" : "♪";
+            document.getElementById("sound-toggle-label").textContent = soundEnabled ? "SOUND ON" : "SOUND OFF";
+        });
+
+        document.addEventListener("keydown", event => {
+            if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
+            if (event.key === "1" && !truthButton.disabled) submitAnswer(true);
+            if (event.key === "2" && !lieButton.disabled) submitAnswer(false);
+            if (event.key === " " && currentRound && document.activeElement !== audioButton
+                && document.activeElement !== truthButton && document.activeElement !== lieButton
+                && document.activeElement !== createRoomButton && document.activeElement !== joinRoomButton) {
+                event.preventDefault();
+                audioButton.click();
+            }
+        });
+
+        const invitedRoom = new URLSearchParams(window.location.search).get("room");
+        if (invitedRoom) roomCodeInput.value = invitedRoom.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    </script>
+</body>
+</html>

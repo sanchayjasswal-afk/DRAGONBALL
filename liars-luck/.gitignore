@@ -1,0 +1,7 @@
+node_modules/
+npm-debug.log*
+android/
+*.jks
+*.keystore
+app-release*.aab
+app-release*.apk

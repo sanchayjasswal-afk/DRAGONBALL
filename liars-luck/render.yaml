@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: liars-luck
+    runtime: node
+    plan: free
+    rootDir: liars-luck
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: PLAY_ASSET_LINKS_SHA256
+        sync: false
