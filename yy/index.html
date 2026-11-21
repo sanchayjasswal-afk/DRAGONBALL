@@ -1,0 +1,1262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090c0c">
+  <title>NIGHTFALL // 100 Waves</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090c0c;
+      --panel: #111817;
+      --panel-2: #151e1c;
+      --line: #27322f;
+      --text: #e7ece8;
+      --muted: #82908a;
+      --lime: #c5f56a;
+      --amber: #ffbd61;
+      --red: #ff666b;
+      --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      --sans: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 50% -35%, rgba(108, 139, 102, .13), transparent 58%),
+        linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, 40px 40px, 40px 40px, auto;
+      font: 14px/1.45 var(--sans);
+    }
+    button { font: inherit; }
+    .shell { max-width: 1540px; margin: auto; padding: 0 30px 25px; }
+    .topbar {
+      height: 68px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(151,174,163,.14);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; }
+    .brand-mark {
+      width: 35px; height: 35px; display: grid; place-items: center;
+      border: 1px solid rgba(197,245,106,.55); border-radius: 9px;
+      color: var(--lime); background: rgba(197,245,106,.08);
+      box-shadow: 0 0 24px rgba(197,245,106,.09);
+    }
+    .brand-mark svg { width: 20px; height: 20px; }
+    .brand-name { font-size: 15px; font-weight: 900; letter-spacing: .12em; }
+    .brand-name span { color: var(--lime); }
+    .brand-sub { margin-top: 1px; color: var(--muted); font: 8px var(--mono); letter-spacing: .17em; }
+    .top-status { display: flex; align-items: center; gap: 20px; color: #a0aca5; font: 9px var(--mono); letter-spacing: .1em; }
+    .status-live { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+    .sector { padding: 5px 8px; border: 1px solid #35413b; border-radius: 4px; color: #c1ccc4; }
+
+    .intro {
+      display: flex; align-items: end; justify-content: space-between;
+      gap: 18px; padding: 22px 0 17px;
+    }
+    .eyebrow { display: flex; align-items: center; gap: 8px; color: var(--lime); font: 9px var(--mono); letter-spacing: .16em; }
+    .eyebrow:before { content: ""; width: 17px; height: 1px; background: var(--lime); }
+    h1 { margin: 7px 0 0; font-size: clamp(24px, 3vw, 33px); letter-spacing: -.055em; line-height: 1.15; }
+    .intro-copy { margin: 6px 0 0; color: var(--muted); font-size: 11px; }
+    .launch {
+      height: 39px; min-width: 147px; display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 0 15px; border: 0; border-radius: 6px;
+      color: #10150b; background: var(--lime); font-size: 10px; font-weight: 900;
+      letter-spacing: .08em; cursor: pointer; transition: .15s;
+      box-shadow: 0 4px 20px rgba(197,245,106,.12);
+    }
+    .launch:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .launch svg { width: 14px; height: 14px; }
+    .launch:disabled { color: #a7b0a9; background: #27312c; box-shadow: none; cursor: default; transform: none; }
+
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 12px; }
+    .stat {
+      min-height: 66px; padding: 10px 13px; border: 1px solid var(--line); border-radius: 7px;
+      background: linear-gradient(135deg, rgba(21,30,28,.94), rgba(15,21,20,.96));
+    }
+    .stat-label { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font: 8px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+    .stat-label i { color: #62726a; font-style: normal; font-size: 12px; }
+    .stat-value { display: flex; align-items: baseline; gap: 6px; margin-top: 3px; font: 700 20px/1 var(--mono); letter-spacing: -.06em; }
+    .stat-suffix { color: var(--muted); font: 9px var(--mono); letter-spacing: 0; }
+    .wave-value { color: var(--lime); }
+    .health-value { color: #f08a72; }
+    .ammo-value { color: #e2d7a9; }
+    .health-track { height: 3px; margin-top: 7px; overflow: hidden; border-radius: 3px; background: #303b36; }
+    .health-fill { width: 100%; height: 100%; background: linear-gradient(90deg,#ff6d68,#d7e46f); transition: width .18s; }
+    .ammo-track { height: 3px; margin-top: 7px; overflow: hidden; border-radius: 3px; background: #303b36; }
+    .ammo-fill { width: 100%; height: 100%; background: var(--amber); transition: width .15s; }
+    .cash-value { color: var(--amber); }
+
+    .game-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 12px; align-items: stretch; }
+    .panel { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: rgba(15,21,20,.97); }
+    .panel-head { min-height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--line); }
+    .panel-title { display: flex; align-items: center; gap: 7px; font-size: 9px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+    .panel-title svg { width: 14px; height: 14px; color: var(--lime); }
+    .panel-tag { color: var(--muted); font: 8px var(--mono); letter-spacing: .07em; }
+
+    .arena-frame { position: relative; overflow: hidden; background: #151c19; }
+    #arena {
+      display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 650px;
+      background: #151c19; cursor: crosshair;
+    }
+    .arena-hud {
+      position: absolute; z-index: 1; top: 11px; left: 12px; display: flex; gap: 7px;
+      pointer-events: none;
+    }
+    .hud-chip {
+      padding: 5px 8px; border: 1px solid rgba(183,198,181,.2); border-radius: 4px;
+      color: #d3ddd3; background: rgba(8,12,11,.72); font: 8px var(--mono); letter-spacing: .08em;
+      backdrop-filter: blur(6px);
+    }
+    .hud-chip strong { color: var(--lime); font-weight: 700; }
+    .arena-message {
+      position: absolute; z-index: 2; top: 50%; left: 50%; width: min(390px, calc(100% - 34px));
+      padding: 22px; border: 1px solid rgba(196,218,191,.25); border-radius: 9px;
+      text-align: center; background: rgba(9,13,12,.9); backdrop-filter: blur(9px);
+      box-shadow: 0 16px 70px rgba(0,0,0,.4); transform: translate(-50%,-50%);
+    }
+    .arena-message[hidden] { display: none; }
+    .message-kicker { color: var(--lime); font: 8px var(--mono); letter-spacing: .2em; }
+    .message-title { margin: 7px 0 4px; font-size: 21px; font-weight: 900; letter-spacing: -.04em; }
+    .message-copy { margin: 0 auto 15px; max-width: 310px; color: #9aa79f; font-size: 10px; line-height: 1.7; }
+    .message-button {
+      min-width: 145px; height: 35px; border: 0; border-radius: 5px; color: #10150b;
+      background: var(--lime); font: 850 9px var(--mono); letter-spacing: .08em; cursor: pointer;
+    }
+    .message-button:hover { filter: brightness(1.1); }
+    .arena-caption {
+      min-height: 32px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 0 11px; border-top: 1px solid var(--line); color: #718078; font: 8px var(--mono); letter-spacing: .06em;
+    }
+    .arena-caption strong { color: #a7b2aa; font-weight: 500; }
+    .right-column { display: flex; flex-direction: column; gap: 12px; }
+    .mission-body { padding: 12px; }
+    .wave-display { display: flex; align-items: baseline; justify-content: space-between; }
+    .wave-number { color: var(--lime); font: 700 33px/1 var(--mono); letter-spacing: -.09em; }
+    .wave-total { color: #64736a; font: 10px var(--mono); }
+    .wave-caption { margin-top: 5px; color: #bac4bc; font-size: 10px; font-weight: 700; }
+    .progress-track { height: 4px; margin: 11px 0 7px; overflow: hidden; border-radius: 4px; background: #29332e; }
+    .progress-fill { width: 0; height: 100%; background: linear-gradient(90deg,var(--lime),#e3ee9c); transition: width .2s; }
+    .progress-text { display: flex; justify-content: space-between; color: var(--muted); font: 8px var(--mono); }
+    .mission-separator { height: 1px; margin: 13px 0; background: var(--line); }
+    .mission-label { color: var(--muted); font: 8px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+    .threat-list { display: grid; gap: 8px; margin-top: 9px; }
+    .threat-row { display: flex; align-items: center; gap: 8px; }
+    .threat-icon { width: 24px; height: 24px; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid #343e37; border-radius: 5px; color: #c4f18e; background: #1b251e; font-size: 12px; }
+    .threat-row:nth-child(2) .threat-icon { color: #ff9a76; background: #2a201c; }
+    .threat-row:nth-child(3) .threat-icon { color: #d5b68b; background: #28251e; }
+    .threat-name { flex: 1; color: #c4cdc5; font-size: 9px; }
+    .threat-unlock { color: #6f7c74; font: 8px var(--mono); }
+    .weapon-card {
+      display: flex; align-items: center; gap: 10px; margin-top: 9px; padding: 9px;
+      border: 1px solid #303b34; border-radius: 6px; background: #151e19;
+    }
+    .weapon-symbol { width: 29px; height: 29px; display: grid; place-items: center; border: 1px solid rgba(197,245,106,.25); border-radius: 6px; color: var(--lime); background: rgba(197,245,106,.07); }
+    .weapon-info { flex: 1; }
+    .weapon-name { font-size: 9px; font-weight: 750; }
+    .weapon-level { margin-top: 2px; color: var(--muted); font: 8px var(--mono); }
+    .weapon-next { margin-top: 8px; color: #8d9991; font-size: 8px; line-height: 1.6; }
+    .map-wrap { padding: 10px; }
+    #minimap { display: block; width: 100%; height: auto; border: 1px solid #29342e; border-radius: 5px; background: #19211c; }
+    .map-legend { display: flex; justify-content: space-between; gap: 5px; margin-top: 7px; color: #829087; font: 8px var(--mono); }
+    .map-legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .legend-dot { width: 6px; height: 6px; display: inline-block; border-radius: 50%; background: var(--lime); }
+    .legend-dot.cache { background: var(--amber); }
+    .legend-dot.threat { background: var(--red); }
+    .store-list { display: grid; gap: 7px; }
+    .store-item { padding: 8px; border: 1px solid #2b3730; border-radius: 6px; background: #141c17; }
+    .store-item.rare { border-color: rgba(149,122,255,.42); background: linear-gradient(120deg,rgba(52,37,77,.28),#141c17 75%); }
+    .store-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 5px; }
+    .store-name { color: #dce5dc; font-size: 9px; font-weight: 750; }
+    .store-detail { margin-top: 2px; color: #86948a; font: 8px var(--mono); }
+    .store-price { color: var(--amber); font: 8px var(--mono); white-space: nowrap; }
+    .store-price.rare { color: #c1a8ff; }
+    .store-actions { display: flex; gap: 5px; margin-top: 7px; }
+    .store-button { flex: 1; min-height: 25px; padding: 3px 5px; border: 1px solid #425046; border-radius: 4px; color: #c8d3c9; background: #202a23; font: 8px var(--mono); cursor: pointer; }
+    .store-button:hover:not(:disabled) { border-color: var(--lime); color: var(--lime); }
+    .store-button.primary { border-color: rgba(197,245,106,.35); color: var(--lime); background: rgba(197,245,106,.06); }
+    .store-button:disabled { opacity: .42; cursor: default; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 6px; padding: 11px 12px 12px; }
+    .control { display: flex; align-items: center; gap: 6px; color: #8c9991; font: 8px var(--mono); }
+    kbd { min-width: 23px; padding: 3px 4px; border: 1px solid #39443d; border-radius: 3px; color: #c8d1c9; background: #1a231e; text-align: center; font: 8px var(--mono); }
+    .bottom-note { display: flex; justify-content: space-between; gap: 12px; padding: 11px 2px 0; color: #56625b; font: 8px var(--mono); letter-spacing: .06em; }
+    .toast {
+      position: fixed; z-index: 10; right: 20px; bottom: 20px; max-width: min(370px,calc(100vw - 32px));
+      padding: 11px 14px; border: 1px solid rgba(197,245,106,.34); border-radius: 7px;
+      color: #e5eee3; background: #172019; box-shadow: 0 12px 38px rgba(0,0,0,.4);
+      font-size: 10px; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .18s;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 1050px) {
+      .game-layout { grid-template-columns: minmax(0, 1fr) 230px; }
+    }
+    @media (max-width: 780px) {
+      .shell { padding: 0 13px 18px; }
+      .topbar { height: 58px; }
+      .top-status { gap: 8px; font-size: 8px; }
+      .intro { align-items: flex-start; flex-direction: column; padding: 18px 0 14px; }
+      .intro .launch { width: 100%; }
+      .stats { grid-template-columns: repeat(2,1fr); gap: 7px; }
+      .stat { min-height: 62px; padding: 9px 10px; }
+      .game-layout { grid-template-columns: 1fr; }
+      #arena { min-height: 290px; aspect-ratio: 4 / 3; }
+      .right-column { display: grid; grid-template-columns: 1fr 1fr; }
+      .right-column > :first-child { grid-row: span 2; }
+      .bottom-note { flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+      .brand-sub, .sector { display: none; }
+      .brand-name { font-size: 13px; }
+      .right-column { display: flex; }
+      .arena-caption { font-size: 7px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v5c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-5"/></svg>
+        </div>
+        <div><div class="brand-name">NIGHT<span>FALL</span></div><div class="brand-sub">QUARANTINE ZONE / 07</div></div>
+      </div>
+      <div class="top-status"><span class="status-live"><i class="status-dot"></i> RADIO LINK ACTIVE</span><span class="sector">LAST STAND // 100 WAVES</span></div>
+    </header>
+
+    <section class="intro">
+      <div>
+        <div class="eyebrow">SURVIVAL PROTOCOL / NIGHT 01</div>
+        <h1>Hold the line. Survive the horde.</h1>
+        <p class="intro-copy">One survivor. An endless outbreak. Clear all 100 waves to make it out.</p>
+      </div>
+      <button class="launch" id="startButton">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m8 5 12 7-12 7z"/></svg>
+        <span>DEPLOY</span>
+      </button>
+    </section>
+
+    <section class="stats" aria-label="Survival status">
+      <div class="stat"><div class="stat-label">Current wave <i>⌁</i></div><div class="stat-value wave-value"><span id="waveValue">00</span><span class="stat-suffix">/ 100</span></div></div>
+      <div class="stat"><div class="stat-label">Eliminations <i>✳</i></div><div class="stat-value"><span id="killValue">000</span><span class="stat-suffix">ZOMBIES</span></div></div>
+      <div class="stat"><div class="stat-label">Cash <i>$</i></div><div class="stat-value cash-value">$<span id="cashValue">300</span></div></div>
+      <div class="stat">
+        <div class="stat-label">Vital signs <i>♥</i></div><div class="stat-value health-value"><span id="healthValue">100</span><span class="stat-suffix">HP</span></div>
+        <div class="health-track"><div class="health-fill" id="healthFill"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Magazine <i>▤</i></div><div class="stat-value ammo-value"><span id="ammoValue">12</span><span class="stat-suffix" id="ammoCapacity">/ 12</span></div>
+        <div class="ammo-track"><div class="ammo-fill" id="ammoFill"></div></div>
+      </div>
+    </section>
+
+    <main class="game-layout">
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M4.6 6.6l2.1 2.1M3 13h3M18 8.7l2.1-2.1M18 13h3M12 18v3"/><circle cx="12" cy="13" r="6"/><path d="m10 13 1.4 1.4L14.5 11"/></svg>
+            Combat zone
+          </div>
+          <span class="panel-tag" id="zoneLabel">SAFE AREA / AWAITING DEPLOYMENT</span>
+        </div>
+        <div class="arena-frame">
+          <canvas id="arena" width="1200" height="675" aria-label="Top-down zombie survival game"></canvas>
+          <div class="arena-hud">
+            <span class="hud-chip">WAVE <strong id="hudWave">00 / 100</strong></span>
+            <span class="hud-chip">HOSTILES <strong id="hudHostiles">0</strong></span>
+          </div>
+          <div class="arena-message" id="message">
+            <div class="message-kicker" id="messageKicker">OUTBREAK DETECTED</div>
+            <div class="message-title" id="messageTitle">The dead are coming.</div>
+            <p class="message-copy" id="messageCopy">Move with WASD, aim with your mouse, and fire with click or Space. Explore for weapon caches, earn cash, and survive all 100 waves.</p>
+            <button class="message-button" id="messageButton">ENTER THE QUARANTINE</button>
+          </div>
+        </div>
+        <div class="arena-caption"><span><strong id="arenaStatus">AWAITING DEPLOYMENT</strong></span><span>GREENFIELD / SECTOR 07 / NIGHT</span></div>
+      </section>
+
+      <aside class="right-column">
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Mission briefing</div><span class="panel-tag">LIVE</span></div>
+          <div class="mission-body">
+            <div class="wave-display"><span class="wave-number" id="briefWave">00</span><span class="wave-total">OF 100 WAVES</span></div>
+            <div class="wave-caption" id="waveCaption">Prepare for the first contact</div>
+            <div class="progress-track"><div class="progress-fill" id="waveProgress"></div></div>
+            <div class="progress-text"><span id="waveProgressLabel">NO CONTACTS</span><span id="waveProgressCount">0 / 0</span></div>
+            <div class="mission-separator"></div>
+            <div class="mission-label">Threat assessment</div>
+            <div class="threat-list">
+              <div class="threat-row"><span class="threat-icon">♟</span><span class="threat-name">Walkers</span><span class="threat-unlock">WAVE 01</span></div>
+              <div class="threat-row"><span class="threat-icon">ϟ</span><span class="threat-name">Runners</span><span class="threat-unlock">WAVE 05</span></div>
+              <div class="threat-row"><span class="threat-icon">⬟</span><span class="threat-name">Brutes</span><span class="threat-unlock">WAVE 10</span></div>
+            </div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Exploration map</div><span class="panel-tag">LIVE RADAR</span></div>
+          <div class="map-wrap">
+            <canvas id="minimap" width="240" height="150" aria-label="Map showing survivor and weapon caches"></canvas>
+            <div class="map-legend"><span><i class="legend-dot"></i> SURVIVOR</span><span><i class="legend-dot threat"></i> ZOMBIES</span><span><i class="legend-dot cache"></i> WEAPON CACHE</span></div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Field armory</div><span class="panel-tag">SPEND CASH</span></div>
+          <div class="mission-body">
+            <div class="weapon-card"><div class="weapon-symbol" id="weaponSymbol">⌁</div><div class="weapon-info"><div class="weapon-name" id="weaponName">Service Pistol</div><div class="weapon-level" id="weaponLevel">STARTER / UNLIMITED RESERVE</div></div></div>
+            <div class="weapon-next" id="weaponNext">Kill zombies and clear waves to earn cash.</div>
+            <div class="mission-separator"></div>
+            <div class="store-list" id="storeList"></div>
+            <div class="mission-separator"></div>
+            <div class="mission-label">Field controls</div>
+            <div class="controls">
+              <div class="control"><kbd>WASD</kbd><span>Move</span></div>
+              <div class="control"><kbd>MOUSE</kbd><span>Aim</span></div>
+              <div class="control"><kbd>CLICK</kbd><span>Fire</span></div>
+              <div class="control"><kbd>R</kbd><span>Buy ammo</span></div>
+              <div class="control"><kbd>1-5</kbd><span>Switch gun</span></div>
+              <div class="control"><kbd>P</kbd><span>Pause</span></div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+    <footer class="bottom-note"><span>ROAMING UNDEAD ACROSS GREENFIELD — WATCH THE RADAR.</span><span>UNDEAD THREAT LEVEL: <strong style="color:#ff8580">CRITICAL</strong></span></footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const canvas = document.getElementById("arena");
+    const ctx = canvas.getContext("2d");
+    const WIDTH = canvas.width;
+    const HEIGHT = canvas.height;
+    const WORLD_WIDTH = 2800;
+    const WORLD_HEIGHT = 1900;
+    const TOTAL_WAVES = 100;
+    const weapons = [
+      { id: "service", name: "Service Pistol", tag: "SIDEARM", symbol: "⌁", price: 0, capacity: 12, ammoStart: 12, refillCost: 0, delay: 270, damage: 1, pellets: 1, spread: 0.025, speed: 760, color: "#ffe09b", detail: "Starter sidearm / free reserve ammo" },
+      { id: "rifle", name: "Ranger Rifle", tag: "ASSAULT", symbol: "⌖", price: 260, capacity: 50, ammoStart: 50, refillCost: 70, delay: 125, damage: 1, pellets: 1, spread: 0.035, speed: 920, color: "#ffe09b", detail: "50 rounds / steady automatic fire" },
+      { id: "shotgun", name: "Breach Shotgun", tag: "BREACH", symbol: "⌑", price: 420, capacity: 20, ammoStart: 20, refillCost: 110, delay: 560, damage: 1, pellets: 7, spread: 0.34, speed: 690, color: "#ffd39a", detail: "20 shells / wide, heavy spread" },
+      { id: "energyPistol", name: "Energy Pistol", tag: "INFINITE ENERGY", symbol: "ϟ", price: 900, capacity: Infinity, ammoStart: Infinity, infinite: true, refillCost: 0, delay: 205, damage: 2, pellets: 1, spread: 0.018, speed: 1000, color: "#76efff", detail: "Unlimited energy bolts / high damage" },
+      { id: "energyCannon", name: "Nova Energy Cannon", tag: "MYTHIC / RARE", symbol: "✦", price: 5000, capacity: 5, ammoStart: 5, refillCost: 750, delay: 780, damage: 7, blastRadius: 145, infinite: false, color: "#c29bff", detail: "5 blast charges / devastating area burst", rare: true }
+    ];
+    const keys = new Set();
+    const player = { x: WORLD_WIDTH / 2, y: WORLD_HEIGHT / 2, radius: 14, speed: 245, health: 100, angle: -Math.PI / 2, invulnerable: 0 };
+    const zombies = [];
+    const bullets = [];
+    const particles = [];
+    const explosions = [];
+    const scenery = makeScenery();
+    const minimap = document.getElementById("minimap");
+    const mapCtx = minimap.getContext("2d");
+    const camera = { x: WORLD_WIDTH / 2 - WIDTH / 2, y: WORLD_HEIGHT / 2 - HEIGHT / 2 };
+    const mapPickups = [
+      { weaponId: "rifle", x: 400, y: 350, active: true },
+      { weaponId: "shotgun", x: 2370, y: 1440, active: true },
+      { weaponId: "energyPistol", x: 2380, y: 280, active: true },
+      { weaponId: "energyCannon", x: 300, y: 1580, unlockWave: 40, active: true }
+    ];
+    let state = "ready";
+    let wave = 0;
+    let killed = 0;
+    let cash = 300;
+    let waveSpawned = 0;
+    let waveAlive = 0;
+    let waveCount = 0;
+    let spawnClock = 0;
+    let ambientSpawnClock = 1;
+    let waveBreak = 0;
+    let ownedWeapons = new Set(["service"]);
+    let ammoByWeapon = { service: 12, rifle: 0, shotgun: 0, energyPistol: Infinity, energyCannon: 0 };
+    let activeWeaponId = "service";
+    let shotClock = 0;
+    let mouse = { x: WIDTH / 2 + 120, y: HEIGHT / 2 };
+    let toastClock = 0;
+    let lastFrame = 0;
+
+    function makeScenery() {
+      let seed = 907;
+      const random = () => {
+        seed = (seed * 16807) % 2147483647;
+        return (seed - 1) / 2147483646;
+      };
+      return Array.from({ length: 240 }, () => ({
+        x: 25 + random() * (WORLD_WIDTH - 50),
+        y: 25 + random() * (WORLD_HEIGHT - 50),
+        size: 2 + random() * 8,
+        type: random()
+      }));
+    }
+
+    function currentWeapon() {
+      return weapons.find((item) => item.id === activeWeaponId) || weapons[0];
+    }
+
+    function showToast(message) {
+      const element = document.getElementById("toast");
+      element.textContent = message;
+      element.classList.add("show");
+      toastClock = 2.4;
+    }
+
+    function setOverlay(mode) {
+      const overlay = document.getElementById("message");
+      const copy = {
+        ready: ["OUTBREAK DETECTED", "The dead are coming.", "Move with WASD, aim with your mouse, and fire with click or Space. Explore for weapon caches, earn cash, and survive all 100 waves.", "ENTER THE QUARANTINE"],
+        paused: ["FIELD PAUSED", "Catch your breath.", "The horde is waiting. Get ready, then jump back into the fight.", "RESUME SURVIVAL"],
+        over: ["SIGNAL LOST", "You were overrun.", `You made it to wave ${String(wave).padStart(2, "0")} and eliminated ${killed} zombies. The quarantine zone still needs you.`, "TRY AGAIN"],
+        won: ["EXTRACTION AUTHORIZED", "One hundred waves. One survivor.", `You eliminated ${killed} zombies and outlasted the entire outbreak. Greenfield is secure.`, "SURVIVE AGAIN"]
+      }[mode];
+      document.getElementById("messageKicker").textContent = copy[0];
+      document.getElementById("messageTitle").textContent = copy[1];
+      document.getElementById("messageCopy").textContent = copy[2];
+      document.getElementById("messageButton").textContent = copy[3];
+      overlay.hidden = false;
+    }
+
+    function beginRun() {
+      if (state === "over" || state === "won") {
+        wave = 0;
+        killed = 0;
+        cash = 300;
+        waveSpawned = 0;
+        waveAlive = 0;
+        waveCount = 0;
+        spawnClock = 0;
+        ambientSpawnClock = 1;
+        waveBreak = 0;
+        ownedWeapons = new Set(["service"]);
+        ammoByWeapon = { service: 12, rifle: 0, shotgun: 0, energyPistol: Infinity, energyCannon: 0 };
+        activeWeaponId = "service";
+        zombies.length = 0;
+        bullets.length = 0;
+        particles.length = 0;
+        explosions.length = 0;
+        for (const pickup of mapPickups) pickup.active = true;
+      }
+      shotClock = 0;
+      keys.clear();
+      player.x = WORLD_WIDTH / 2;
+      player.y = WORLD_HEIGHT / 2;
+      camera.x = player.x - WIDTH / 2;
+      camera.y = player.y - HEIGHT / 2;
+      player.health = 100;
+      player.invulnerable = 0;
+      state = "playing";
+      document.getElementById("message").hidden = true;
+      document.getElementById("zoneLabel").textContent = "GREENFIELD / ACTIVE ENGAGEMENT";
+      document.getElementById("arenaStatus").textContent = "WAVE 01 // CONTACT IMMINENT";
+      nextWave();
+      renderStore();
+      renderHud();
+    }
+
+    function nextWave() {
+      if (wave >= TOTAL_WAVES) {
+        state = "won";
+        setOverlay("won");
+        document.getElementById("arenaStatus").textContent = "EXTRACTION AUTHORIZED";
+        document.getElementById("zoneLabel").textContent = "ZONE SECURE";
+        return;
+      }
+      wave += 1;
+      waveCount = 3 + Math.floor((wave - 1) / 12);
+      waveSpawned = 0;
+      waveAlive = 0;
+      spawnClock = 0.6;
+      waveBreak = 0;
+      if (wave === 5) showToast("WARNING: runners entering the zone.");
+      if (wave === 10) showToast("WARNING: brute signatures detected.");
+      player.health = Math.min(100, player.health + (wave > 1 ? 12 : 0));
+      renderStore();
+      renderHud();
+      document.getElementById("arenaStatus").textContent = `WAVE ${String(wave).padStart(2, "0")} // CONTACT IMMINENT`;
+    }
+
+    function spawnZombie(ambient = false) {
+      let x;
+      let y;
+      if (ambient) {
+        let attempts = 0;
+        do {
+          x = 25 + Math.random() * (WORLD_WIDTH - 50);
+          y = 25 + Math.random() * (WORLD_HEIGHT - 50);
+          attempts += 1;
+        } while (Math.hypot(player.x - x, player.y - y) < 420 && attempts < 12);
+      } else {
+        const left = Math.max(12, camera.x + 12);
+        const right = Math.min(WORLD_WIDTH - 12, camera.x + WIDTH - 12);
+        const top = Math.max(12, camera.y + 12);
+        const bottom = Math.min(WORLD_HEIGHT - 12, camera.y + HEIGHT - 12);
+        const edge = Math.floor(Math.random() * 4);
+        x = edge < 2 ? (edge === 0 ? left : right) : left + Math.random() * (right - left);
+        y = edge >= 2 ? (edge === 2 ? top : bottom) : top + Math.random() * (bottom - top);
+      }
+      const roll = Math.random();
+      let type = "walker";
+      if (wave >= 10 && roll < 0.13) type = "brute";
+      else if (wave >= 5 && roll < 0.43) type = "runner";
+      const configs = {
+        walker: { hp: 1 + Math.floor(wave / 35), speed: 30 + Math.min(wave * 0.34, 30), radius: 13, damage: 8, color: "#80966e", reward: 25 },
+        runner: { hp: 1 + Math.floor(wave / 55), speed: 64 + Math.min(wave * 0.45, 37), radius: 10, damage: 6, color: "#b28a64", reward: 40 },
+        brute: { hp: 4 + Math.floor(wave / 18), speed: 21 + Math.min(wave * 0.16, 15), radius: 19, damage: 15, color: "#8f6558", reward: 70 }
+      };
+      zombies.push({ x, y, ...configs[type], type, ambient, phase: Math.random() * 6, bite: 0, flash: 0 });
+      if (!ambient) {
+        waveSpawned += 1;
+        waveAlive += 1;
+      }
+    }
+
+    function startReload() {
+      const weapon = currentWeapon();
+      if (state !== "playing" || weapon.infinite) return;
+      if (ammoByWeapon[weapon.id] >= weapon.capacity) {
+        showToast("Magazine is already full.");
+        return;
+      }
+      if (cash < weapon.refillCost) {
+        showToast(`Not enough cash. Ammo refill costs $${weapon.refillCost}.`);
+        return;
+      }
+      cash -= weapon.refillCost;
+      ammoByWeapon[weapon.id] = weapon.capacity;
+      renderStore();
+      renderHud();
+      showToast(`${weapon.name} restocked for $${weapon.refillCost}.`);
+    }
+
+    function buyWeapon(id) {
+      const weapon = weapons.find((item) => item.id === id);
+      if (!weapon) return;
+      if (ownedWeapons.has(id)) {
+        activeWeaponId = id;
+        renderStore();
+        renderHud();
+        showToast(`${weapon.name} equipped.`);
+        return;
+      }
+      if (cash < weapon.price) {
+        showToast(`Need $${weapon.price - cash} more to buy ${weapon.name}.`);
+        return;
+      }
+      cash -= weapon.price;
+      ownedWeapons.add(id);
+      ammoByWeapon[id] = weapon.ammoStart;
+      activeWeaponId = id;
+      renderStore();
+      renderHud();
+      showToast(`${weapon.name} purchased and equipped.`);
+    }
+
+    function restockWeapon(id) {
+      const weapon = weapons.find((item) => item.id === id);
+      if (!weapon || weapon.infinite || !ownedWeapons.has(id)) return;
+      if (ammoByWeapon[id] >= weapon.capacity) {
+        showToast(`${weapon.name} is already full.`);
+        return;
+      }
+      if (cash < weapon.refillCost) {
+        showToast(`Need $${weapon.refillCost - cash} more for ammo.`);
+        return;
+      }
+      cash -= weapon.refillCost;
+      ammoByWeapon[id] = weapon.capacity;
+      renderStore();
+      renderHud();
+      showToast(`${weapon.capacity} rounds added to ${weapon.name}.`);
+    }
+
+    function fire() {
+      if (state !== "playing" || shotClock > 0) return;
+      const weapon = currentWeapon();
+      const ammo = ammoByWeapon[weapon.id];
+      if (!weapon.infinite && ammo <= 0) {
+        showToast(`Out of ammo. Press R to buy a refill for $${weapon.refillCost}.`);
+        return;
+      }
+      if (!weapon.infinite) ammoByWeapon[weapon.id] -= 1;
+      shotClock = weapon.delay / 1000;
+      const aimX = mouse.x + camera.x;
+      const aimY = mouse.y + camera.y;
+      player.angle = Math.atan2(aimY - player.y, aimX - player.x);
+      if (weapon.blastRadius) {
+        explosions.push({ x: aimX, y: aimY, radius: weapon.blastRadius, life: 0.42, maxLife: 0.42, color: weapon.color });
+        for (let i = zombies.length - 1; i >= 0; i -= 1) {
+          const zombie = zombies[i];
+          if (Math.hypot(zombie.x - aimX, zombie.y - aimY) <= weapon.blastRadius) {
+            zombie.hp -= weapon.damage;
+            zombie.flash = 0.12;
+            if (zombie.hp <= 0) {
+              spawnParticles(zombie.x, zombie.y, weapon.color, 12);
+              zombies.splice(i, 1);
+              if (!zombie.ambient) waveAlive = Math.max(0, waveAlive - 1);
+              scoreKill(zombie.reward);
+            }
+          }
+        }
+        spawnParticles(aimX, aimY, weapon.color, 18);
+        showToast("NOVA BLAST!");
+        renderHud();
+        return;
+      }
+      for (let i = 0; i < weapon.pellets; i += 1) {
+        const angle = player.angle + (Math.random() - 0.5) * weapon.spread;
+        const muzzle = player.radius + 13;
+        bullets.push({
+          x: player.x + Math.cos(angle) * muzzle,
+          y: player.y + Math.sin(angle) * muzzle,
+          vx: Math.cos(angle) * weapon.speed,
+          vy: Math.sin(angle) * weapon.speed,
+          damage: weapon.damage,
+          life: 0.85,
+          radius: weapon.pellets > 1 ? 3 : 2.4,
+          color: weapon.color
+        });
+      }
+      spawnParticles(player.x + Math.cos(player.angle) * 27, player.y + Math.sin(player.angle) * 27, weapon.color, 3);
+      renderHud();
+    }
+
+    function spawnParticles(x, y, color, count) {
+      for (let i = 0; i < count; i += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 25 + Math.random() * 100;
+        particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 0.22 + Math.random() * 0.25, maxLife: 0.5, color, radius: 1.5 + Math.random() * 2 });
+      }
+    }
+
+    function update(dt) {
+      if (toastClock > 0) {
+        toastClock -= dt;
+        if (toastClock <= 0) document.getElementById("toast").classList.remove("show");
+      }
+      if (state !== "playing") return;
+      shotClock = Math.max(0, shotClock - dt);
+      if (keys.has(" ") || mouse.down) fire();
+
+      let dx = 0;
+      let dy = 0;
+      if (keys.has("w") || keys.has("arrowup")) dy -= 1;
+      if (keys.has("s") || keys.has("arrowdown")) dy += 1;
+      if (keys.has("a") || keys.has("arrowleft")) dx -= 1;
+      if (keys.has("d") || keys.has("arrowright")) dx += 1;
+      const length = Math.hypot(dx, dy) || 1;
+      player.x = Math.max(24, Math.min(WORLD_WIDTH - 24, player.x + (dx / length) * player.speed * dt));
+      player.y = Math.max(24, Math.min(WORLD_HEIGHT - 24, player.y + (dy / length) * player.speed * dt));
+      camera.x = Math.max(0, Math.min(WORLD_WIDTH - WIDTH, player.x - WIDTH / 2));
+      camera.y = Math.max(0, Math.min(WORLD_HEIGHT - HEIGHT, player.y - HEIGHT / 2));
+      player.angle = Math.atan2(mouse.y + camera.y - player.y, mouse.x + camera.x - player.x);
+      player.invulnerable = Math.max(0, player.invulnerable - dt);
+      collectPickups();
+
+      if (waveSpawned < waveCount) {
+        spawnClock -= dt;
+        if (spawnClock <= 0) {
+          spawnZombie();
+          spawnClock = Math.max(0.38, 0.9 - wave * 0.004);
+        }
+      }
+      const roamingCount = zombies.reduce((count, zombie) => count + (zombie.ambient ? 1 : 0), 0);
+      if (wave < TOTAL_WAVES && roamingCount < 16) {
+        ambientSpawnClock -= dt;
+        if (ambientSpawnClock <= 0) {
+          spawnZombie(true);
+          ambientSpawnClock = 2.4 + Math.random() * 1.8;
+        }
+      }
+
+      if (waveSpawned >= waveCount && waveAlive === 0) {
+        if (wave < TOTAL_WAVES) {
+          if (waveBreak <= 0) {
+            waveBreak = 2.1;
+            document.getElementById("arenaStatus").textContent = `WAVE ${String(wave).padStart(2, "0")} CLEAR // NEXT WAVE INCOMING`;
+            const reward = 60 + wave * 5;
+            cash += reward;
+            renderStore();
+            showToast(`Wave ${wave} cleared. +$${reward} supply bonus.`);
+          } else {
+            waveBreak -= dt;
+            if (waveBreak <= 0) nextWave();
+          }
+        } else if (zombies.length === 0) {
+          nextWave();
+        }
+      }
+
+      for (let i = bullets.length - 1; i >= 0; i -= 1) {
+        const bullet = bullets[i];
+        bullet.x += bullet.vx * dt;
+        bullet.y += bullet.vy * dt;
+        bullet.life -= dt;
+        let hit = false;
+        for (let j = zombies.length - 1; j >= 0; j -= 1) {
+          const zombie = zombies[j];
+          if (Math.hypot(bullet.x - zombie.x, bullet.y - zombie.y) < zombie.radius + bullet.radius) {
+            zombie.hp -= bullet.damage;
+            zombie.flash = 0.09;
+            spawnParticles(bullet.x, bullet.y, "#d5b56d", 2);
+            hit = true;
+            if (zombie.hp <= 0) {
+              spawnParticles(zombie.x, zombie.y, zombie.color, 9);
+              zombies.splice(j, 1);
+              if (!zombie.ambient) waveAlive = Math.max(0, waveAlive - 1);
+              scoreKill(zombie.reward);
+            }
+            break;
+          }
+        }
+        if (hit || bullet.life <= 0 || bullet.x < -10 || bullet.x > WORLD_WIDTH + 10 || bullet.y < -10 || bullet.y > WORLD_HEIGHT + 10) bullets.splice(i, 1);
+      }
+
+      for (const zombie of zombies) {
+        const toX = player.x - zombie.x;
+        const toY = player.y - zombie.y;
+        const distance = Math.hypot(toX, toY) || 1;
+        zombie.phase += dt * (zombie.type === "runner" ? 9 : 5);
+        zombie.flash = Math.max(0, zombie.flash - dt);
+        zombie.bite = Math.max(0, zombie.bite - dt);
+        if (distance > player.radius + zombie.radius + 2) {
+          zombie.x += toX / distance * zombie.speed * dt;
+          zombie.y += toY / distance * zombie.speed * dt;
+        } else if (zombie.bite <= 0 && player.invulnerable <= 0) {
+          player.health = Math.max(0, player.health - zombie.damage);
+          player.invulnerable = 0.38;
+          zombie.bite = 0.72;
+          renderHud();
+          spawnParticles(player.x, player.y, "#d75c53", 5);
+          if (player.health <= 0) {
+            state = "over";
+            setOverlay("over");
+            document.getElementById("arenaStatus").textContent = "SURVIVOR DOWN // SIGNAL LOST";
+            document.getElementById("zoneLabel").textContent = "ENGAGEMENT FAILED";
+            keys.clear();
+          }
+        }
+      }
+
+      for (let i = particles.length - 1; i >= 0; i -= 1) {
+        const particle = particles[i];
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        particle.vx *= 0.92;
+        particle.vy *= 0.92;
+        particle.life -= dt;
+        if (particle.life <= 0) particles.splice(i, 1);
+      }
+      for (let i = explosions.length - 1; i >= 0; i -= 1) {
+        explosions[i].life -= dt;
+        if (explosions[i].life <= 0) explosions.splice(i, 1);
+      }
+      renderHud();
+    }
+
+    function scoreKill(reward) {
+      killed += 1;
+      cash += reward;
+      renderStore();
+      renderHud();
+      document.getElementById("killValue").textContent = String(killed).padStart(3, "0");
+    }
+
+    function renderHud() {
+      const weapon = currentWeapon();
+      const ammo = ammoByWeapon[weapon.id];
+      const launchButton = document.getElementById("startButton");
+      launchButton.disabled = state === "playing" || state === "paused";
+      launchButton.querySelector("span").textContent =
+        state === "playing" ? "DEPLOYED" :
+        state === "paused" ? "PAUSED" :
+        state === "over" ? "REDEPLOY" :
+        state === "won" ? "PLAY AGAIN" : "DEPLOY";
+      document.getElementById("waveValue").textContent = String(wave).padStart(2, "0");
+      document.getElementById("hudWave").textContent = `${String(wave).padStart(2, "0")} / 100`;
+      document.getElementById("briefWave").textContent = String(wave).padStart(2, "0");
+      document.getElementById("killValue").textContent = String(killed).padStart(3, "0");
+      document.getElementById("cashValue").textContent = String(cash);
+      document.getElementById("healthValue").textContent = player.health;
+      document.getElementById("healthFill").style.width = `${player.health}%`;
+      document.getElementById("ammoValue").textContent = weapon.infinite ? "∞" : String(ammo).padStart(2, "0");
+      document.getElementById("ammoCapacity").textContent = weapon.infinite ? "AMMO" : `/ ${weapon.capacity}`;
+      document.getElementById("ammoFill").style.width = `${weapon.infinite ? 100 : ammo / weapon.capacity * 100}%`;
+      document.getElementById("hudHostiles").textContent = String(zombies.length + Math.max(0, waveCount - waveSpawned));
+      const waveKills = waveSpawned - waveAlive;
+      const waveActive = waveSpawned < waveCount || waveAlive > 0;
+      document.getElementById("waveProgress").style.width = `${waveCount ? waveKills / waveCount * 100 : 0}%`;
+      document.getElementById("waveProgressLabel").textContent = wave ? (waveActive ? "WAVE HOSTILES" : "WAVE STATUS") : "NO CONTACTS";
+      document.getElementById("waveProgressCount").textContent = wave ? `${waveKills} / ${waveCount} cleared` : "0 / 0";
+      document.getElementById("waveCaption").textContent = wave ? (waveActive ? "Eliminate the wave to advance" : "Stay alert. Next wave approaching.") : "Prepare for the first contact";
+      document.getElementById("weaponSymbol").textContent = weapon.symbol;
+      document.getElementById("weaponName").textContent = weapon.name;
+      document.getElementById("weaponLevel").textContent = `${weapon.tag} / ${weapon.infinite ? "UNLIMITED AMMO" : `${ammo} / ${weapon.capacity} ${weapon.blastRadius ? "BLAST CELLS" : "ROUNDS"}`}`;
+      document.getElementById("weaponNext").textContent = weapon.infinite
+        ? "Unlimited reserve. Energy pistol bolts hit harder than the starter sidearm."
+        : `Kill zombies for cash. Press R to buy a refill for $${weapon.refillCost}.`;
+      syncStoreButtons();
+    }
+
+    function renderStore() {
+      document.getElementById("storeList").innerHTML = weapons.filter((weapon) => weapon.id !== "service").map((weapon) => {
+        const owned = ownedWeapons.has(weapon.id);
+        const selected = activeWeaponId === weapon.id;
+        const ammo = ammoByWeapon[weapon.id];
+        const details = weapon.infinite
+          ? weapon.detail
+            : weapon.detail;
+        const equipText = owned ? (selected ? "EQUIPPED" : "EQUIP") : `BUY $${weapon.price}`;
+        const buyDisabled = !owned && cash < weapon.price;
+        const restock = owned && !weapon.infinite;
+        return `<div class="store-item${weapon.rare ? " rare" : ""}">
+          <div class="store-top">
+            <div><div class="store-name">${weapon.name}</div><div class="store-detail">${details}</div></div>
+            <span class="store-price${weapon.rare ? " rare" : ""}">${weapon.rare ? "RAREST" : owned ? "OWNED" : `$${weapon.price}`}</span>
+          </div>
+          <div class="store-actions">
+            <button class="store-button primary" data-buy="${weapon.id}" ${selected ? "disabled" : buyDisabled ? "disabled" : ""}>${equipText}</button>
+            ${restock ? `<button class="store-button" data-restock="${weapon.id}" ${ammo >= weapon.capacity || cash < weapon.refillCost ? "disabled" : ""}>AMMO $${weapon.refillCost}</button>` : ""}
+          </div>
+        </div>`;
+      }).join("");
+      document.getElementById("storeList").querySelectorAll("[data-buy]").forEach((button) => {
+        button.addEventListener("click", () => buyWeapon(button.dataset.buy));
+      });
+      document.getElementById("storeList").querySelectorAll("[data-restock]").forEach((button) => {
+        button.addEventListener("click", () => restockWeapon(button.dataset.restock));
+      });
+    }
+
+    function syncStoreButtons() {
+      document.querySelectorAll("#storeList [data-buy]").forEach((button) => {
+        const weapon = weapons.find((item) => item.id === button.dataset.buy);
+        button.disabled = ownedWeapons.has(weapon.id)
+          ? activeWeaponId === weapon.id
+          : cash < weapon.price;
+      });
+      document.querySelectorAll("#storeList [data-restock]").forEach((button) => {
+        const weapon = weapons.find((item) => item.id === button.dataset.restock);
+        button.disabled = ammoByWeapon[weapon.id] >= weapon.capacity || cash < weapon.refillCost;
+      });
+    }
+
+    function collectPickups() {
+      for (const pickup of mapPickups) {
+        if (!pickup.active || (pickup.unlockWave && wave < pickup.unlockWave)) continue;
+        if (Math.hypot(player.x - pickup.x, player.y - pickup.y) > 40) continue;
+        const weapon = weapons.find((item) => item.id === pickup.weaponId);
+        pickup.active = false;
+        if (!ownedWeapons.has(weapon.id)) {
+          ownedWeapons.add(weapon.id);
+          ammoByWeapon[weapon.id] = weapon.ammoStart;
+          activeWeaponId = weapon.id;
+          showToast(`CACHE FOUND: ${weapon.name} collected and equipped.`);
+        } else if (!weapon.infinite) {
+          ammoByWeapon[weapon.id] = weapon.capacity;
+          showToast(`${weapon.name} cache collected. Ammo refilled.`);
+        } else {
+          showToast(`${weapon.name} cache found.`);
+        }
+        renderStore();
+        renderHud();
+      }
+    }
+
+    function roundedRect(x, y, w, h, radius, fill) {
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, radius);
+      ctx.fill();
+    }
+
+    function drawCar(x, y, angle, color) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.fillStyle = "rgba(0,0,0,.38)";
+      ctx.beginPath();
+      ctx.ellipse(3, 5, 39, 20, 0, 0, Math.PI * 2);
+      ctx.fill();
+      roundedRect(-38, -17, 76, 34, 10, color);
+      roundedRect(-17, -12, 34, 24, 6, "#303a34");
+      ctx.fillStyle = "rgba(201,218,195,.23)";
+      ctx.fillRect(-13, -9, 25, 7);
+      ctx.fillRect(-13, 2, 25, 7);
+      ctx.fillStyle = "#e7d9a1";
+      ctx.fillRect(31, -12, 4, 6);
+      ctx.fillRect(31, 6, 4, 6);
+      ctx.fillStyle = "#8b534a";
+      ctx.fillRect(-35, -12, 3, 6);
+      ctx.fillRect(-35, 6, 3, 6);
+      ctx.restore();
+    }
+
+    function drawBarricade(x, y, angle) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.fillStyle = "rgba(0,0,0,.28)";
+      ctx.fillRect(-35, 8, 70, 8);
+      ctx.fillStyle = "#564c39";
+      ctx.fillRect(-34, -8, 68, 16);
+      ctx.fillStyle = "#b29151";
+      for (let i = -26; i <= 24; i += 17) {
+        ctx.save();
+        ctx.translate(i, 0);
+        ctx.rotate(-0.45);
+        ctx.fillRect(-4, -11, 8, 22);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    function drawGround() {
+      ctx.fillStyle = "#1a211c";
+      ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+      for (let y = 0; y < WORLD_HEIGHT; y += 54) {
+        for (let x = 0; x < WORLD_WIDTH; x += 54) {
+          const shade = ((x * 7 + y * 13) % 5) * 0.007;
+          ctx.fillStyle = `rgba(157,181,137,${shade})`;
+          ctx.fillRect(x, y, 52, 52);
+          ctx.strokeStyle = "rgba(0,0,0,.1)";
+          ctx.strokeRect(x, y, 52, 52);
+        }
+      }
+      ctx.fillStyle = "#252b25";
+      ctx.fillRect(0, 900, WORLD_WIDTH, 112);
+      ctx.fillRect(1320, 0, 118, WORLD_HEIGHT);
+      ctx.fillStyle = "rgba(199,180,111,.34)";
+      for (let x = 18; x < WORLD_WIDTH; x += 72) ctx.fillRect(x, 954, 38, 3);
+      for (let y = 18; y < WORLD_HEIGHT; y += 72) ctx.fillRect(1377, y, 3, 38);
+      ctx.fillStyle = "rgba(0,0,0,.17)";
+      ctx.fillRect(0, 894, WORLD_WIDTH, 4);
+      ctx.fillRect(0, 1014, WORLD_WIDTH, 4);
+      ctx.fillRect(1314, 0, 4, WORLD_HEIGHT);
+      ctx.fillRect(1440, 0, 4, WORLD_HEIGHT);
+
+      for (const patch of scenery) {
+        if (patch.type < 0.35) {
+          ctx.fillStyle = "rgba(104,126,82,.35)";
+          ctx.beginPath();
+          ctx.ellipse(patch.x, patch.y, patch.size * 1.9, patch.size, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (patch.type < 0.68) {
+          ctx.strokeStyle = "rgba(137,147,120,.19)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(patch.x - patch.size, patch.y - patch.size);
+          ctx.lineTo(patch.x + patch.size, patch.y + patch.size * .6);
+          ctx.moveTo(patch.x + patch.size, patch.y - patch.size);
+          ctx.lineTo(patch.x - patch.size * .2, patch.y + patch.size);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = "rgba(174,157,117,.2)";
+          ctx.beginPath();
+          ctx.arc(patch.x, patch.y, patch.size * .45, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      drawCar(220, 520, -.12, "#42483f");
+      drawCar(2560, 1420, .2, "#343b36");
+      drawCar(2200, 390, -.3, "#45483d");
+      drawCar(530, 1390, .18, "#343b36");
+      drawBarricade(970, 500, -.06);
+      drawBarricade(1780, 1380, .09);
+      drawBarricade(1980, 740, .3);
+      ctx.strokeStyle = "rgba(189,207,168,.17)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(7, 7, WORLD_WIDTH - 14, WORLD_HEIGHT - 14);
+      ctx.setLineDash([8, 7]);
+      ctx.strokeStyle = "rgba(210,205,158,.12)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(17, 17, WORLD_WIDTH - 34, WORLD_HEIGHT - 34);
+      ctx.setLineDash([]);
+    }
+
+    function drawPickups() {
+      for (const pickup of mapPickups) {
+        if (!pickup.active || (pickup.unlockWave && wave < pickup.unlockWave)) continue;
+        const weapon = weapons.find((item) => item.id === pickup.weaponId);
+        const color = weapon.rare ? "#c29bff" : weapon.id.startsWith("energy") ? "#76efff" : "#ffd17c";
+        const pulse = 1 + Math.sin(performance.now() / 190 + pickup.x) * 0.13;
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(pickup.x, pickup.y, 27 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(pickup.x, pickup.y, 17 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "#111713";
+        ctx.fillRect(pickup.x - 12, pickup.y - 12, 24, 24);
+        ctx.fillStyle = color;
+        ctx.font = "bold 15px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(weapon.symbol, pickup.x, pickup.y + 1);
+        ctx.font = "bold 9px monospace";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText(weapon.rare ? "RARE CACHE" : `${weapon.name.toUpperCase()} CACHE`, pickup.x, pickup.y - 24);
+        if (Math.hypot(player.x - pickup.x, player.y - pickup.y) < 120) {
+          ctx.font = "9px monospace";
+          ctx.fillStyle = "#e9efd9";
+          ctx.fillText("MOVE CLOSER TO COLLECT", pickup.x, pickup.y + 37);
+        }
+        ctx.restore();
+      }
+    }
+
+    function drawMinimap() {
+      const mapWidth = minimap.width;
+      const mapHeight = minimap.height;
+      const scaleX = mapWidth / WORLD_WIDTH;
+      const scaleY = mapHeight / WORLD_HEIGHT;
+      mapCtx.fillStyle = "#1a211c";
+      mapCtx.fillRect(0, 0, mapWidth, mapHeight);
+      mapCtx.fillStyle = "#30362c";
+      mapCtx.fillRect(0, 900 * scaleY, mapWidth, 112 * scaleY);
+      mapCtx.fillRect(1320 * scaleX, 0, 118 * scaleX, mapHeight);
+      for (const pickup of mapPickups) {
+        if (!pickup.active || (pickup.unlockWave && wave < pickup.unlockWave)) continue;
+        const weapon = weapons.find((item) => item.id === pickup.weaponId);
+        mapCtx.fillStyle = weapon.rare ? "#c29bff" : weapon.id.startsWith("energy") ? "#76efff" : "#ffd17c";
+        mapCtx.beginPath();
+        mapCtx.arc(pickup.x * scaleX, pickup.y * scaleY, weapon.rare ? 3.8 : 3, 0, Math.PI * 2);
+        mapCtx.fill();
+      }
+      mapCtx.fillStyle = "#ff7771";
+      for (const zombie of zombies) {
+        mapCtx.beginPath();
+        mapCtx.arc(zombie.x * scaleX, zombie.y * scaleY, zombie.type === "brute" ? 2.8 : 1.8, 0, Math.PI * 2);
+        mapCtx.fill();
+      }
+      mapCtx.strokeStyle = "rgba(218,231,207,.35)";
+      mapCtx.strokeRect(camera.x * scaleX, camera.y * scaleY, WIDTH * scaleX, HEIGHT * scaleY);
+      mapCtx.fillStyle = "#c5f56a";
+      mapCtx.beginPath();
+      mapCtx.arc(player.x * scaleX, player.y * scaleY, 3.5, 0, Math.PI * 2);
+      mapCtx.fill();
+    }
+
+    function drawZombie(zombie) {
+      const angle = Math.atan2(player.y - zombie.y, player.x - zombie.x);
+      const bob = Math.sin(zombie.phase) * 1.4;
+      ctx.save();
+      ctx.translate(zombie.x, zombie.y + bob);
+      ctx.rotate(angle);
+      ctx.fillStyle = "rgba(0,0,0,.35)";
+      ctx.beginPath();
+      ctx.ellipse(1, zombie.radius * .7, zombie.radius * 1.2, zombie.radius * .7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = zombie.flash > 0 ? "#fff3c9" : "#596a4c";
+      ctx.lineWidth = zombie.type === "brute" ? 7 : 4;
+      ctx.lineCap = "round";
+      const limb = Math.sin(zombie.phase) * 4;
+      ctx.beginPath();
+      ctx.moveTo(-2, -3); ctx.lineTo(-8, -zombie.radius * .72 + limb);
+      ctx.moveTo(2, 4); ctx.lineTo(9, zombie.radius * .68 - limb);
+      ctx.moveTo(-3, zombie.radius * .5); ctx.lineTo(-5 - limb, zombie.radius + 4);
+      ctx.moveTo(3, zombie.radius * .5); ctx.lineTo(6 + limb, zombie.radius + 4);
+      ctx.stroke();
+      ctx.fillStyle = zombie.flash > 0 ? "#fff0ce" : zombie.color;
+      ctx.beginPath();
+      ctx.ellipse(0, 1, zombie.radius * .68, zombie.radius * .95, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#c8c0a3";
+      ctx.beginPath();
+      ctx.arc(zombie.radius * .62, -2, zombie.radius * .42, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f16b56";
+      ctx.beginPath();
+      ctx.arc(zombie.radius * .92, -4, 1.7, 0, Math.PI * 2);
+      ctx.arc(zombie.radius * .92, 0, 1.7, 0, Math.PI * 2);
+      ctx.fill();
+      if (zombie.hp > 1) {
+        ctx.rotate(-angle);
+        ctx.fillStyle = "rgba(0,0,0,.5)";
+        ctx.fillRect(-zombie.radius, -zombie.radius - 8, zombie.radius * 2, 3);
+        ctx.fillStyle = "#dd7862";
+        ctx.fillRect(-zombie.radius, -zombie.radius - 8, zombie.radius * 2 * Math.max(0, zombie.hp / (zombie.type === "brute" ? 10 : 4)), 3);
+      }
+      ctx.restore();
+    }
+
+    function drawPlayer() {
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.angle);
+      const blink = player.invulnerable > 0 && Math.floor(performance.now() / 70) % 2 === 0;
+      if (!blink) {
+        ctx.fillStyle = "rgba(0,0,0,.4)";
+        ctx.beginPath();
+        ctx.ellipse(1, 7, 18, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#59685b";
+        ctx.beginPath();
+        ctx.ellipse(0, 2, 12, 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#d2bf91";
+        ctx.beginPath();
+        ctx.arc(5, -8, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#272a22";
+        ctx.beginPath();
+        ctx.arc(5, -10, 8, Math.PI, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#333c32";
+        ctx.lineWidth = 5;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(3, 0); ctx.lineTo(12, -1);
+        ctx.stroke();
+        ctx.fillStyle = "#171b17";
+        ctx.fillRect(7, -4, 21, 6);
+        ctx.fillStyle = "#909a79";
+        ctx.fillRect(20, -3, 9, 4);
+      }
+      ctx.restore();
+      const glow = ctx.createRadialGradient(player.x, player.y, 22, player.x, player.y, 185);
+      glow.addColorStop(0, "rgba(224,226,169,.11)");
+      glow.addColorStop(1, "rgba(224,226,169,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(player.x - 185, player.y - 185, 370, 370);
+    }
+
+    function draw() {
+      ctx.save();
+      ctx.translate(-camera.x, -camera.y);
+      drawGround();
+      drawPickups();
+      for (const bullet of bullets) {
+        ctx.fillStyle = bullet.color;
+        ctx.shadowColor = bullet.color;
+        ctx.shadowBlur = 9;
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      for (const blast of explosions) {
+        const progress = 1 - blast.life / blast.maxLife;
+        ctx.globalAlpha = 1 - progress;
+        ctx.fillStyle = blast.color;
+        ctx.strokeStyle = blast.color;
+        ctx.lineWidth = 5 * (1 - progress) + 1;
+        ctx.beginPath();
+        ctx.arc(blast.x, blast.y, blast.radius * progress, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.9 * (1 - progress);
+        ctx.beginPath();
+        ctx.arc(blast.x, blast.y, blast.radius * progress, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      for (const zombie of zombies) drawZombie(zombie);
+      for (const particle of particles) {
+        ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      drawPlayer();
+      ctx.restore();
+      drawMinimap();
+      if (state === "playing") {
+        ctx.strokeStyle = "rgba(211,226,178,.48)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 8, 0, Math.PI * 2);
+        ctx.moveTo(mouse.x - 13, mouse.y); ctx.lineTo(mouse.x - 5, mouse.y);
+        ctx.moveTo(mouse.x + 5, mouse.y); ctx.lineTo(mouse.x + 13, mouse.y);
+        ctx.moveTo(mouse.x, mouse.y - 13); ctx.lineTo(mouse.x, mouse.y - 5);
+        ctx.moveTo(mouse.x, mouse.y + 5); ctx.lineTo(mouse.x, mouse.y + 13);
+        ctx.stroke();
+      }
+    }
+
+    function frame(timestamp) {
+      const dt = Math.min(0.04, (timestamp - (lastFrame || timestamp)) / 1000);
+      lastFrame = timestamp;
+      update(dt);
+      draw();
+      requestAnimationFrame(frame);
+    }
+
+    function updateMouse(event) {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = (event.clientX - rect.left) * WIDTH / rect.width;
+      mouse.y = (event.clientY - rect.top) * HEIGHT / rect.height;
+    }
+
+    canvas.addEventListener("pointermove", updateMouse);
+    canvas.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      updateMouse(event);
+      mouse.down = true;
+      fire();
+    });
+    window.addEventListener("pointerup", () => { mouse.down = false; });
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) event.preventDefault();
+      keys.add(key);
+      if (key === "r") startReload();
+      if (/^[1-5]$/.test(key)) {
+        const weapon = weapons[Number(key) - 1];
+        if (ownedWeapons.has(weapon.id)) {
+          activeWeaponId = weapon.id;
+          renderStore();
+          renderHud();
+        }
+      }
+      if (key === "p" || key === "escape") {
+        if (state === "playing") {
+          state = "paused";
+          setOverlay("paused");
+          document.getElementById("arenaStatus").textContent = "PAUSED";
+          renderStore();
+          renderHud();
+        } else if (state === "paused") {
+          state = "playing";
+          document.getElementById("message").hidden = true;
+          document.getElementById("arenaStatus").textContent = `WAVE ${String(wave).padStart(2, "0")} // ENGAGED`;
+          renderHud();
+        }
+      }
+    });
+    window.addEventListener("keyup", (event) => keys.delete(event.key.toLowerCase()));
+    window.addEventListener("blur", () => {
+      keys.clear();
+      mouse.down = false;
+    });
+    document.getElementById("startButton").addEventListener("click", () => {
+      beginRun();
+      showToast("Stay mobile. The first wave is inbound.");
+    });
+    document.getElementById("messageButton").addEventListener("click", () => {
+      if (state === "paused") {
+        state = "playing";
+        document.getElementById("message").hidden = true;
+      } else {
+        beginRun();
+        showToast("Stay mobile. The first wave is inbound.");
+      }
+    });
+
+    renderStore();
+    renderHud();
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
